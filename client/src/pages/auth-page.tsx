@@ -41,7 +41,7 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to ImageAI</CardTitle>
+            <CardTitle>Welcome to Bettercaption</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
