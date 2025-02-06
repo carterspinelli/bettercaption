@@ -16,9 +16,19 @@ export default function HomePage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File size must be less than 5MB");
+      }
       const formData = new FormData();
       formData.append("image", file);
-      const res = await apiRequest("POST", "/api/images", formData);
+      const res = await fetch("/api/images", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      if (!res.ok) {
+        throw new Error("Failed to upload image");
+      }
       return res.json();
     },
     onSuccess: () => {
