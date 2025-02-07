@@ -17,25 +17,31 @@ export function InstagramShareButton({ image }: InstagramShareButtonProps) {
 
   const handleShare = async () => {
     if (isMobile) {
-      // For mobile devices, directly open Instagram
-      const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(
-        image.enhancedUrl
-      )}&InstagramCaption=${encodeURIComponent(image.caption)}`;
+      // For mobile devices, create a more compact share URL
+      const instagramUrl = `instagram://library?LocalIdentifier=${image.id}&InstagramCaption=${encodeURIComponent(image.caption)}`;
 
-      // Try to open Instagram app
-      window.location.href = instagramUrl;
+      try {
+        // Try to open Instagram app
+        window.location.href = instagramUrl;
 
-      // Set a timeout to check if the app was opened
-      setTimeout(() => {
-        // If we're still here after a short delay, Instagram might not be installed
-        if (document.hidden) return; // User switched to Instagram
-        
+        // Set a timeout to check if the app was opened
+        setTimeout(() => {
+          // If we're still here after a short delay, Instagram might not be installed
+          if (document.hidden) return; // User switched to Instagram
+
+          toast({
+            title: "Couldn't open Instagram",
+            description: "Please make sure you have Instagram installed on your device.",
+            variant: "destructive",
+          });
+        }, 2000);
+      } catch (error) {
         toast({
-          title: "Couldn't open Instagram",
-          description: "Please make sure you have Instagram installed on your device.",
+          title: "Error sharing to Instagram",
+          description: "There was a problem opening Instagram. Please try again.",
           variant: "destructive",
         });
-      }, 2000);
+      }
     } else {
       // For desktop, show QR code modal
       setIsShareModalOpen(true);

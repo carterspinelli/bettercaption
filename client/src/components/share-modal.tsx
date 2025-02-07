@@ -11,15 +11,14 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
-  // Create a URL that will deep link to Instagram with the image and caption
-  const createInstagramShareUrl = () => {
-    const baseUrl = 'instagram://library?AssetPath=';
-    // In a production environment, we would need to first save the image to the user's
-    // camera roll and then reference it here. For now, we'll demonstrate the flow.
-    return `${baseUrl}${encodeURIComponent(image.enhancedUrl)}&InstagramCaption=${encodeURIComponent(image.caption)}`;
+  // Create a compact share URL that only includes the image ID
+  const createShareUrl = () => {
+    const baseUrl = 'instagram://library?LocalIdentifier=';
+    // We'll just pass the image ID - Instagram will handle the media selection
+    return `${baseUrl}${image.id}&InstagramCaption=${encodeURIComponent(image.caption)}`;
   };
 
-  const shareUrl = createInstagramShareUrl();
+  const shareUrl = createShareUrl();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -31,7 +30,7 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
           <QRCodeSVG
             value={shareUrl}
             size={256}
-            level="H"
+            level="M"
             includeMargin={true}
           />
           <p className="text-sm text-muted-foreground text-center">
