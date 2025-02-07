@@ -16,7 +16,7 @@ export async function analyzeImage(imageBuffer: Buffer): Promise<{
     messages: [
       {
         role: "system",
-        content: "You are a professional Instagram content creator. Analyze the image and provide a detailed description and a creative, engaging caption that would work well on Instagram. Return the response as JSON with 'description' and 'suggestedCaption' fields."
+        content: "You are a professional Instagram content creator with expertise in art, architecture, history, and brand recognition. Analyze the image with particular attention to landmarks, historic places, artwork, and company logos. If any of these elements are present, incorporate them naturally into your caption to add context and value. For landmarks and historic places, include their significance. For artwork, reference the style or artist if recognizable. For logos, mention the brand if it adds value to the caption. Return the response as JSON with 'description' and 'suggestedCaption' fields."
       },
       {
         role: "user",
