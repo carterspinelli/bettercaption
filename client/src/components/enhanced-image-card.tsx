@@ -3,6 +3,7 @@ import { Image } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { InstagramShareButton } from "./instagram-share-button";
 
 interface EnhancedImageCardProps {
   image: Image;
@@ -32,14 +33,17 @@ export function EnhancedImageCard({ image }: EnhancedImageCardProps) {
       </CardContent>
       <CardFooter className="flex-col gap-4 p-6">
         <p className="text-sm text-muted-foreground">{image.caption}</p>
-        <Button
-          variant="secondary"
-          className="w-full"
-          onClick={copyCaption}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          Copy Caption
-        </Button>
+        <div className="flex flex-col w-full gap-2">
+          <InstagramShareButton image={image} />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={copyCaption}
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Copy Caption
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
