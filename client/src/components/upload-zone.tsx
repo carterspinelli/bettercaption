@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface UploadZoneProps {
   onUpload: (file: File) => void;
@@ -9,22 +10,50 @@ interface UploadZoneProps {
 }
 
 export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
+  const { toast } = useToast();
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
+        // Log file details for debugging
+        console.log('File selected:', {
+          name: acceptedFiles[0].name,
+          type: acceptedFiles[0].type,
+          size: acceptedFiles[0].size
+        });
+
+        if (acceptedFiles[0].size > 5 * 1024 * 1024) {
+          toast({
+            title: "File too large",
+            description: "Please select an image under 5MB",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (!acceptedFiles[0].type.startsWith('image/')) {
+          toast({
+            title: "Invalid file type",
+            description: "Please select an image file",
+            variant: "destructive"
+          });
+          return;
+        }
+
         onUpload(acceptedFiles[0]);
       }
     },
-    [onUpload]
+    [onUpload, toast]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".jpeg", ".jpg", ".png"],
+      'image/*': ['.jpeg', '.jpg', '.png', '.heic'], // Added .heic for iOS photos
     },
     maxSize: 5 * 1024 * 1024, // 5MB
     disabled: isUploading,
+    multiple: false
   });
 
   return (

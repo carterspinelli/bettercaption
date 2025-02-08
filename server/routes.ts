@@ -9,6 +9,14 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
+  fileFilter: (_req, file, cb) => {
+    // Accept all image types
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
 });
 
 export function registerRoutes(app: Express): Server {
@@ -22,6 +30,12 @@ export function registerRoutes(app: Express): Server {
       if (!req.file) return res.status(400).send("No image uploaded");
 
       try {
+        console.log('Processing uploaded file:', {
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size
+        });
+
         const enhanced = await enhanceImage(req.file.buffer);
         const analysis = await analyzeImage(req.file.buffer);
 
@@ -37,6 +51,7 @@ export function registerRoutes(app: Express): Server {
 
         res.status(201).json(image);
       } catch (error: any) {
+        console.error('Error processing image:', error);
         res.status(500).send(error.message);
       }
     },
