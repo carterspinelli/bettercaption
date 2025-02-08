@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: images = [] } = useQuery<Image[]>({
     queryKey: ["/api/images"],
@@ -25,30 +27,29 @@ export default function HomePage() {
         lastModified: file.lastModified
       });
 
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("File size must be less than 5MB");
+      // Pre-upload auth check
+      const authCheck = await fetch("/api/user", {
+        credentials: "include",
+      });
+
+      if (!authCheck.ok) {
+        console.error("Auth check failed:", {
+          status: authCheck.status,
+          statusText: authCheck.statusText
+        });
+        throw new Error("Authentication failed - please log in again");
       }
 
-      // Create FormData and append the file
       const formData = new FormData();
       formData.append("image", file);
 
       try {
-        // First check if we're actually authenticated
-        const authCheck = await fetch("/api/user", {
-          credentials: "include",
-        });
-
-        if (!authCheck.ok) {
-          console.error("Auth check failed:", authCheck.status);
-          throw new Error("Please log in again");
-        }
-
-        // Proceed with upload
-        const res = await fetch("/api/images", {
+        // Add a timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const res = await fetch(`/api/images?t=${timestamp}`, {
           method: "POST",
           body: formData,
-          credentials: "include", // Important: Include credentials for session cookie
+          credentials: "include",
           headers: {
             'Accept': 'application/json',
           }
@@ -59,16 +60,25 @@ export default function HomePage() {
           console.error("Upload failed:", {
             status: res.status,
             statusText: res.statusText,
-            error: errorText
+            error: errorText,
+            headers: Object.fromEntries(res.headers.entries())
           });
+
+          if (res.status === 401) {
+            throw new Error("Session expired - please log in again");
+          }
           throw new Error(errorText || "Failed to upload image");
         }
 
         const data = await res.json();
         console.log("Upload successful:", data);
         return data;
-      } catch (error) {
-        console.error("Upload error:", error);
+      } catch (error: any) {
+        console.error("Upload error:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         throw error;
       }
     },
@@ -80,15 +90,21 @@ export default function HomePage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Upload mutation error:", error);
+
       toast({
         title: "Upload failed",
         description: error.message,
         variant: "destructive",
       });
 
-      // If it was an auth error, redirect to login
-      if (error.message.toLowerCase().includes("please log in")) {
-        window.location.href = "/auth";
+      // Handle authentication errors by redirecting to login
+      if (error.message.toLowerCase().includes("log in")) {
+        toast({
+          title: "Session expired",
+          description: "Please log in again to continue",
+        });
+        setLocation("/auth");
       }
     },
   });

@@ -34,13 +34,13 @@ export function setupAuth(app: Express) {
     resave: true,
     saveUninitialized: true,
     store: storage.sessionStore,
-    name: 'sessionId', // Explicit cookie name
+    name: 'sessionId',
     cookie: {
-      secure: false, // Allow non-HTTPS in development
+      secure: false,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax',
-      path: '/', // Ensure cookie is available for all paths
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'none', // Changed to 'none' to support cross-origin requests on mobile
+      path: '/',
     }
   };
 
@@ -51,20 +51,19 @@ export function setupAuth(app: Express) {
     }
   }
 
-  // Configure CORS before session middleware
+  // Move CORS configuration before any middleware
   app.use((req, res, next) => {
+    // Allow the mobile origin
     const origin = req.headers.origin || '';
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Cookie');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Cookie, Authorization');
 
-    // Handle preflight requests
     if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
+      return res.sendStatus(200);
     }
+    next();
   });
 
   app.use(session(sessionSettings));
@@ -112,24 +111,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByUsername(req.body.username);
-    if (existingUser) {
-      return res.status(400).send("Username already exists");
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).send("Username already exists");
+      }
+
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password),
+      });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      next(error);
     }
-
-    const user = await storage.createUser({
-      ...req.body,
-      password: await hashPassword(req.body.password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         return next(err);
       }
@@ -139,6 +142,10 @@ export function setupAuth(app: Express) {
       req.logIn(user, (err) => {
         if (err) {
           return next(err);
+        }
+        // Set explicit session cookie
+        if (req.session) {
+          req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 hours
         }
         return res.status(200).json(user);
       });
@@ -153,6 +160,12 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    console.log('User check:', {
+      isAuthenticated: req.isAuthenticated(),
+      sessionID: req.sessionID,
+      user: req.user?.id || 'no-user',
+    });
+
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
