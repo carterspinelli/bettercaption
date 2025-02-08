@@ -38,8 +38,7 @@ export default function HomePage() {
           body: formData,
           credentials: "include", // Important: Include credentials for session cookie
           headers: {
-            // Important: Do not set Content-Type header for FormData
-            // Let the browser set it automatically with the correct boundary
+            // Do not set Content-Type header for FormData
             'Accept': 'application/json',
           }
         });
