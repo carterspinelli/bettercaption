@@ -6,9 +6,11 @@ import { EnhancedImageCard } from "@/components/enhanced-image-card";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
 
   const { data: images = [] } = useQuery<Image[]>({
     queryKey: ["/api/images"],
@@ -16,23 +18,59 @@ export default function HomePage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log("Starting upload for file:", {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
       if (file.size > 5 * 1024 * 1024) {
         throw new Error("File size must be less than 5MB");
       }
+
+      // Create FormData and append the file
       const formData = new FormData();
       formData.append("image", file);
-      const res = await fetch("/api/images", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
-      if (!res.ok) {
-        throw new Error("Failed to upload image");
+
+      try {
+        const res = await fetch("/api/images", {
+          method: "POST",
+          body: formData,
+          // Important: Don't set Content-Type header, let the browser set it with the boundary
+          credentials: "include"
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Upload failed:", {
+            status: res.status,
+            statusText: res.statusText,
+            error: errorText
+          });
+          throw new Error(errorText || "Failed to upload image");
+        }
+
+        const data = await res.json();
+        console.log("Upload successful:", data);
+        return data;
+      } catch (error) {
+        console.error("Upload error:", error);
+        throw error;
       }
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/images"] });
+      toast({
+        title: "Image uploaded!",
+        description: "Your image has been successfully uploaded and enhanced.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 

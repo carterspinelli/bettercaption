@@ -10,11 +10,17 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (_req, file, cb) => {
-    // Accept all image types
+    console.log('Received file:', {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+
+    // Accept all image types including those from mobile devices
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error(`Invalid file type: ${file.mimetype}. Only image files are allowed`));
     }
   }
 });
@@ -27,17 +33,29 @@ export function registerRoutes(app: Express): Server {
     upload.single("image"),
     async (req, res) => {
       if (!req.isAuthenticated()) return res.sendStatus(401);
-      if (!req.file) return res.status(400).send("No image uploaded");
 
-      try {
-        console.log('Processing uploaded file:', {
+      console.log('Processing image upload request:', {
+        body: req.body,
+        file: req.file ? {
+          fieldname: req.file.fieldname,
           originalname: req.file.originalname,
+          encoding: req.file.encoding,
           mimetype: req.file.mimetype,
           size: req.file.size
-        });
+        } : 'No file received'
+      });
 
+      if (!req.file) {
+        console.error('No file in request');
+        return res.status(400).send("No image uploaded");
+      }
+
+      try {
+        console.log('Starting image enhancement...');
         const enhanced = await enhanceImage(req.file.buffer);
+        console.log('Image enhanced, starting analysis...');
         const analysis = await analyzeImage(req.file.buffer);
+        console.log('Analysis complete');
 
         // In a real app, we would upload these to S3/CloudFlare/etc
         // For this demo, we'll use base64 strings
@@ -49,10 +67,14 @@ export function registerRoutes(app: Express): Server {
           analysis,
         });
 
+        console.log('Image saved successfully:', { imageId: image.id });
         res.status(201).json(image);
       } catch (error: any) {
-        console.error('Error processing image:', error);
-        res.status(500).send(error.message);
+        console.error('Error processing image:', {
+          error: error.message,
+          stack: error.stack
+        });
+        res.status(500).send(error.message || "Failed to process image");
       }
     },
   );
