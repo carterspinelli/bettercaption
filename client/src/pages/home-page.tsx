@@ -21,7 +21,8 @@ export default function HomePage() {
       console.log("Starting upload for file:", {
         name: file.name,
         type: file.type,
-        size: file.size
+        size: file.size,
+        lastModified: file.lastModified
       });
 
       if (file.size > 5 * 1024 * 1024) {
@@ -33,12 +34,22 @@ export default function HomePage() {
       formData.append("image", file);
 
       try {
+        // First check if we're actually authenticated
+        const authCheck = await fetch("/api/user", {
+          credentials: "include",
+        });
+
+        if (!authCheck.ok) {
+          console.error("Auth check failed:", authCheck.status);
+          throw new Error("Please log in again");
+        }
+
+        // Proceed with upload
         const res = await fetch("/api/images", {
           method: "POST",
           body: formData,
           credentials: "include", // Important: Include credentials for session cookie
           headers: {
-            // Do not set Content-Type header for FormData
             'Accept': 'application/json',
           }
         });
@@ -74,6 +85,11 @@ export default function HomePage() {
         description: error.message,
         variant: "destructive",
       });
+
+      // If it was an auth error, redirect to login
+      if (error.message.toLowerCase().includes("please log in")) {
+        window.location.href = "/auth";
+      }
     },
   });
 

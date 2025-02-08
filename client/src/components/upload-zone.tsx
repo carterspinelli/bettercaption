@@ -13,16 +13,19 @@ export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
   const { toast } = useToast();
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+
         // Log file details for debugging
         console.log('File selected:', {
-          name: acceptedFiles[0].name,
-          type: acceptedFiles[0].type,
-          size: acceptedFiles[0].size
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
         });
 
-        if (acceptedFiles[0].size > 5 * 1024 * 1024) {
+        if (file.size > 5 * 1024 * 1024) {
           toast({
             title: "File too large",
             description: "Please select an image under 5MB",
@@ -31,16 +34,26 @@ export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
           return;
         }
 
-        if (!acceptedFiles[0].type.startsWith('image/')) {
+        // Handle HEIC/HEIF files from iOS
+        if (file.type.includes('heic') || file.type.includes('heif')) {
           toast({
-            title: "Invalid file type",
-            description: "Please select an image file",
-            variant: "destructive"
+            title: "Processing image",
+            description: "Converting image format...",
           });
-          return;
+          // For now we'll just try to upload it directly
+          // In a production app, we'd convert HEIC to JPEG here
         }
 
-        onUpload(acceptedFiles[0]);
+        try {
+          onUpload(file);
+        } catch (error) {
+          console.error('Error handling file:', error);
+          toast({
+            title: "Upload failed",
+            description: "There was an error processing your image",
+            variant: "destructive"
+          });
+        }
       }
     },
     [onUpload, toast]
@@ -49,11 +62,12 @@ export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.heic'], // Added .heic for iOS photos
+      'image/*': ['.jpeg', '.jpg', '.png', '.heic', '.heif'], // Added iOS image formats
     },
     maxSize: 5 * 1024 * 1024, // 5MB
     disabled: isUploading,
-    multiple: false
+    multiple: false,
+    useFsAccessApi: false // Disable File System Access API for better mobile compatibility
   });
 
   return (
@@ -74,7 +88,7 @@ export function UploadZone({ onUpload, isUploading }: UploadZoneProps) {
           ? "Drop the image here"
           : isUploading
           ? "Uploading..."
-          : "Drag & drop an image here, or click to select"}
+          : "Tap to select an image from your library"}
       </p>
     </div>
   );

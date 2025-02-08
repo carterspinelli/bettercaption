@@ -31,14 +31,16 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.REPL_ID!,
-    resave: true, // Changed to true to ensure session is saved
-    saveUninitialized: true, // Changed to true to ensure new sessions are saved
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
+    name: 'sessionId', // Explicit cookie name
     cookie: {
       secure: false, // Allow non-HTTPS in development
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax', // Changed to lax to work better with mobile browsers
+      sameSite: 'lax',
+      path: '/', // Ensure cookie is available for all paths
     }
   };
 
@@ -49,18 +51,25 @@ export function setupAuth(app: Express) {
     }
   }
 
+  // Configure CORS before session middleware
+  app.use((req, res, next) => {
+    const origin = req.headers.origin || '';
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Cookie');
+
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
+
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Add CORS headers for API requests
-  app.use('/api', (req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-  });
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -82,12 +91,22 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log('Serializing user:', user.id);
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log('Deserializing user:', id);
       const user = await storage.getUser(id);
+      if (!user) {
+        console.log('User not found during deserialization:', id);
+        return done(null, false);
+      }
       done(null, user);
     } catch (error) {
+      console.error('Error deserializing user:', error);
       done(error);
     }
   });

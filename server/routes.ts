@@ -30,12 +30,13 @@ export function registerRoutes(app: Express): Server {
 
   app.post(
     "/api/images",
-    // First check authentication before processing the upload
+    // Authentication middleware
     (req, res, next) => {
       console.log('Auth check:', {
         isAuthenticated: req.isAuthenticated(),
-        session: req.session ? 'exists' : 'missing',
-        user: req.user ? 'exists' : 'missing'
+        session: req.session?.id || 'no-session',
+        user: req.user?.id || 'no-user',
+        cookies: req.headers.cookie
       });
 
       if (!req.isAuthenticated()) {
@@ -44,6 +45,7 @@ export function registerRoutes(app: Express): Server {
       }
       next();
     },
+    // File upload middleware
     upload.single("image"),
     async (req, res) => {
       console.log('Processing image upload request:', {
