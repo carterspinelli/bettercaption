@@ -30,10 +30,22 @@ export function registerRoutes(app: Express): Server {
 
   app.post(
     "/api/images",
+    // First check authentication before processing the upload
+    (req, res, next) => {
+      console.log('Auth check:', {
+        isAuthenticated: req.isAuthenticated(),
+        session: req.session ? 'exists' : 'missing',
+        user: req.user ? 'exists' : 'missing'
+      });
+
+      if (!req.isAuthenticated()) {
+        console.error('Unauthorized upload attempt');
+        return res.status(401).send("Unauthorized");
+      }
+      next();
+    },
     upload.single("image"),
     async (req, res) => {
-      if (!req.isAuthenticated()) return res.sendStatus(401);
-
       console.log('Processing image upload request:', {
         body: req.body,
         file: req.file ? {

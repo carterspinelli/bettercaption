@@ -36,8 +36,12 @@ export default function HomePage() {
         const res = await fetch("/api/images", {
           method: "POST",
           body: formData,
-          // Important: Don't set Content-Type header, let the browser set it with the boundary
-          credentials: "include"
+          credentials: "include", // Important: Include credentials for session cookie
+          headers: {
+            // Important: Do not set Content-Type header for FormData
+            // Let the browser set it automatically with the correct boundary
+            'Accept': 'application/json',
+          }
         });
 
         if (!res.ok) {
