@@ -71,4 +71,3 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
     </Dialog>
   );
 }
-}
