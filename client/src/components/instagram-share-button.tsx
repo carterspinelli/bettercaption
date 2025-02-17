@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Instagram } from "lucide-react";
@@ -17,33 +18,31 @@ export function InstagramShareButton({ image }: InstagramShareButtonProps) {
 
   const handleShare = async () => {
     if (isMobile) {
-      // For mobile devices, create a more compact share URL
-      const instagramUrl = `instagram://library?LocalIdentifier=${image.id}&InstagramCaption=${encodeURIComponent(image.caption)}`;
-
       try {
-        // Try to open Instagram app
-        window.location.href = instagramUrl;
-
-        // Set a timeout to check if the app was opened
+        // Copy caption to clipboard
+        await navigator.clipboard.writeText(image.caption);
+        
+        // Download image
+        const link = document.createElement('a');
+        link.href = image.originalUrl;
+        link.download = 'enhanced-image.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Open Instagram
         setTimeout(() => {
-          // If we're still here after a short delay, Instagram might not be installed
-          if (document.hidden) return; // User switched to Instagram
-
-          toast({
-            title: "Couldn't open Instagram",
-            description: "Please make sure you have Instagram installed on your device.",
-            variant: "destructive",
-          });
-        }, 2000);
+          window.location.href = 'instagram://library';
+        }, 1000);
+        
       } catch (error) {
         toast({
           title: "Error sharing to Instagram",
-          description: "There was a problem opening Instagram. Please try again.",
+          description: "There was a problem preparing the share. Please try again.",
           variant: "destructive",
         });
       }
     } else {
-      // For desktop, show QR code modal
       setIsShareModalOpen(true);
     }
   };
