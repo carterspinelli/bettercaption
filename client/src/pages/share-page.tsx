@@ -21,14 +21,35 @@ export default function SharePage() {
           // Fetch and save the image
           const response = await fetch(imageUrl);
           const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'instagram-photo.jpg';
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+          
+          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            // For mobile devices
+            const file = new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' });
+            try {
+              if (navigator.share && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  files: [file],
+                  title: 'Instagram Photo',
+                });
+              } else {
+                const url = window.URL.createObjectURL(blob);
+                window.location.href = url;
+              }
+            } catch (err) {
+              const url = window.URL.createObjectURL(blob);
+              window.location.href = url;
+            }
+          } else {
+            // For desktop
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'instagram-photo.jpg';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
           
           // Copy caption to clipboard
           await navigator.clipboard.writeText(caption);
