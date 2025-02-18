@@ -21,17 +21,31 @@ export function InstagramShareButton({ image }: InstagramShareButtonProps) {
         // Copy caption to clipboard
         await navigator.clipboard.writeText(image.caption);
         
-        // Download image
-        const link = document.createElement('a');
-        link.href = image.originalUrl;
-        link.download = 'instagram-photo.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Download image using fetch
+        const response = await fetch(image.originalUrl);
+        const blob = await response.blob();
+        
+        // Try to save the image using native sharing
+        if (navigator.share) {
+          await navigator.share({
+            files: [new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' })],
+            text: image.caption
+          });
+        } else {
+          // Fallback for browsers that don't support native sharing
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'instagram-photo.jpg';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
 
         toast({
           title: "Ready to share!",
-          description: "Photo downloaded and caption copied to clipboard.",
+          description: "Photo ready for sharing.",
         });
 
         // Open Instagram after a short delay
