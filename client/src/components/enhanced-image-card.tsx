@@ -43,6 +43,16 @@ export function EnhancedImageCard({ image }: EnhancedImageCardProps) {
             <Copy className="mr-2 h-4 w-4" />
             Copy Caption
           </Button>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p className="font-medium mb-2">How to share to Instagram:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Click "Share to Instagram" button</li>
+              <li>Save the photo when prompted</li>
+              <li>Open Instagram and create a new post</li>
+              <li>Select the saved photo</li>
+              <li>Paste the copied caption</li>
+            </ol>
+          </div>
         </div>
       </CardFooter>
     </Card>

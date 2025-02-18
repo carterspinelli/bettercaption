@@ -33,7 +33,8 @@ export function InstagramShareButton({ image }: InstagramShareButtonProps) {
           
           toast({
             title: "Success!",
-            description: "Please open Instagram to create your post.",
+            description: "1. Save the photo when prompted\n2. Open Instagram and create a new post\n3. Select the saved photo\n4. Paste the copied caption",
+            duration: 5000,
           });
         } else {
           // Fallback for browsers that don't support sharing files
