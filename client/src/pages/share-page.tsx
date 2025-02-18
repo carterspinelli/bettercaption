@@ -16,12 +16,21 @@ function SharePageContent() {
           const image = await response.json();
           const imageUrl = image.originalUrl;
 
+          // Fetch the image data
+          const imageResponse = await fetch(imageUrl);
+          const blob = await imageResponse.blob();
+
+          // Create object URL
+          const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = imageUrl;
+          a.href = url;
           a.download = 'instagram-photo.jpg';
+          a.setAttribute('data-downloadurl', ['image/jpeg', a.download, a.href].join(':'));
+          
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
 
           toast({
             title: "Image ready",
