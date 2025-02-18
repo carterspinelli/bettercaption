@@ -19,8 +19,8 @@ export default function SharePage() {
           const caption = image.caption;
 
           // Fetch and save the image
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
+          const imageResponse = await fetch(imageUrl);
+          const blob = await imageResponse.blob();
           const url = window.URL.createObjectURL(blob);
 
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
