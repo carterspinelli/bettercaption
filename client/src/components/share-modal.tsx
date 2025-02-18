@@ -36,6 +36,8 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
     });
   };
 
+  const isMobile = useIsMobile();
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -43,12 +45,14 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
           <DialogTitle>Share to Instagram</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
-          <QRCodeSVG
-            value={window.location.href}
-            size={256}
-            level="M"
-            includeMargin={true}
-          />
+          {!isMobile && (
+            <QRCodeSVG
+              value={window.location.href}
+              size={256}
+              level="M"
+              includeMargin={true}
+            />
+          )}
           <div className="flex flex-col gap-2 w-full">
             <Button onClick={handleDownload} variant="outline" className="w-full">
               <Download className="mr-2 h-4 w-4" />
