@@ -7,12 +7,16 @@ import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+// Added import for the new SharePage component
+import SharePage from "@/pages/share-page";
+
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/share" component={SharePage} /> {/* Added SharePage route */}
       <Route component={NotFound} />
     </Switch>
   );

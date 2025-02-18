@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -6,11 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 export default function SharePage() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  
+
   useEffect(() => {
     const handleShare = async () => {
       const imageId = searchParams.get('id');
-      
+
       if (imageId) {
         try {
           const response = await fetch(`/api/images/${imageId}`);
@@ -21,24 +20,18 @@ export default function SharePage() {
           // Fetch and save the image
           const response = await fetch(imageUrl);
           const blob = await response.blob();
-          
+
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             // For mobile devices
             const file = new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' });
-            try {
-              if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                  files: [file],
-                  title: 'Instagram Photo',
-                });
-              } else {
-                const url = window.URL.createObjectURL(blob);
-                window.location.href = url;
-              }
-            } catch (err) {
-              const url = window.URL.createObjectURL(blob);
-              window.location.href = url;
-            }
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'instagram-photo.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
           } else {
             // For desktop
             const url = window.URL.createObjectURL(blob);
@@ -50,10 +43,10 @@ export default function SharePage() {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           }
-          
+
           // Copy caption to clipboard
           await navigator.clipboard.writeText(caption);
-          
+
           toast({
             title: "Ready to share!",
             description: "Photo saved and caption copied to clipboard. You can now create your Instagram post!",
@@ -68,10 +61,10 @@ export default function SharePage() {
         }
       }
     };
-    
+
     handleShare();
   }, [searchParams, toast]);
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="text-center">
