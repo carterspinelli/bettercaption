@@ -20,19 +20,38 @@ export function InstagramShareButton({ image }: InstagramShareButtonProps) {
       try {
         // Copy caption to clipboard
         await navigator.clipboard.writeText(image.caption);
-        
-        // Download image
-        const link = document.createElement('a');
-        link.href = image.originalUrl;
-        link.download = 'instagram-photo.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
 
-        toast({
-          title: "Ready to share!",
-          description: "Photo downloaded and caption copied to clipboard.",
-        });
+        // Fetch the image and create a blob
+        const response = await fetch(image.originalUrl);
+        const blob = await response.blob();
+        
+        // Try to use the Web Share API first
+        if (navigator.canShare && navigator.canShare({ files: [new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' })] })) {
+          await navigator.share({
+            files: [new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' })],
+          });
+          
+          toast({
+            title: "Success!",
+            description: "Please open Instagram to create your post.",
+          });
+        } else {
+          // Fallback for browsers that don't support sharing files
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'instagram-photo.jpg';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          toast({
+            title: "Photo saved!",
+            description: "Caption copied. You can now create your Instagram post.",
+          });
+        }
 
         // Open Instagram after a short delay
         setTimeout(() => {
