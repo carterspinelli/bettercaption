@@ -103,10 +103,13 @@ export function registerRoutes(app: Express): Server {
     const image = await storage.getImage(parseInt(req.params.id));
     if (!image) return res.status(404).send("Image not found");
 
-    //Improved response for better client-side handling of "Save to Photos"
-    res.setHeader('Content-Type', image.originalUrl.split(';')[0]); //Set correct content type
-    res.setHeader('Content-Disposition', `attachment; filename="${image.caption}.jpg"`); //Use caption for filename
-    res.send(Buffer.from(image.originalUrl.split(',')[1], 'base64'));
+    const base64Data = image.originalUrl.split(',')[1];
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Disposition', 'attachment; filename="image.jpg"');
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
   });
 
   const httpServer = createServer(app);
