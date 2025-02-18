@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, BrowserRouter } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
-export default function SharePage() {
+function SharePageContent() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
@@ -12,50 +12,29 @@ export default function SharePage() {
 
       if (imageId) {
         try {
-          // Fetch image details
           const response = await fetch(`/api/images/${imageId}`);
           const image = await response.json();
           const imageUrl = image.originalUrl;
-          const caption = image.caption;
-
-          // Fetch and save the image
-          const imageResponse = await fetch(imageUrl);
-          const blob = await imageResponse.blob();
-          const url = window.URL.createObjectURL(blob);
 
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // For mobile devices - show image with download option
-            document.body.innerHTML = `
-              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
-                <img src="${imageUrl}" style="width: 100%; max-width: 500px; height: auto; margin-bottom: 20px;" />
-                <button onclick="window.location.href='${imageUrl}'" style="position: fixed; bottom: 20px; padding: 10px 20px; background-color: #000; color: #fff; border: none; border-radius: 5px; font-family: system-ui;">
-                  Save Image
-                </button>
-              </div>
-            `;
+            window.location.href = imageUrl;
           } else {
-            // For desktop
             const a = document.createElement('a');
-            a.href = url;
+            a.href = imageUrl;
             a.download = 'instagram-photo.jpg';
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           }
 
-          // Copy caption to clipboard
-          await navigator.clipboard.writeText(caption);
-
           toast({
-            title: "Ready to share!",
-            description: "Photo saved and caption copied to clipboard. You can now create your Instagram post!",
-            duration: 5000,
+            title: "Image ready",
+            description: "Your image is being downloaded",
           });
         } catch (error) {
           toast({
             title: "Error",
-            description: "There was a problem preparing your share. Please try again.",
+            description: "There was a problem downloading the image. Please try again.",
             variant: "destructive",
           });
           console.error('Share error:', error);
@@ -69,11 +48,19 @@ export default function SharePage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Preparing your Instagram share...</h1>
+        <h1 className="text-2xl font-bold mb-4">Preparing your download...</h1>
         <p className="text-muted-foreground">
-          You can close this window after saving the photo.
+          Your image will download automatically.
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <BrowserRouter>
+      <SharePageContent />
+    </BrowserRouter>
   );
 }
