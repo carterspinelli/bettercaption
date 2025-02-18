@@ -49,22 +49,8 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
             level="M"
             includeMargin={true}
           />
-          <div className="flex flex-col gap-2 w-full">
-            <Button onClick={handleDownload} variant="outline" className="w-full">
-              <Download className="mr-2 h-4 w-4" />
-              Download Photo
-            </Button>
-            <Button onClick={copyCaption} variant="outline" className="w-full">
-              <Copy className="mr-2 h-4 w-4" />
-              Copy Caption
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground text-center">
-            1. Download the photo and copy the caption
-            <br />
-            2. Open Instagram and create a new post
-            <br />
-            3. Select the downloaded photo and paste the caption
+          <p className="text-sm text-muted-foreground text-center mt-4">
+            Scan the QR code with your phone's camera to open the mobile share page
           </p>
         </div>
       </DialogContent>

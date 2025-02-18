@@ -12,11 +12,18 @@ function SharePageContent() {
 
       if (imageId) {
         try {
+          // First copy caption
+          const response = await fetch(`/api/images/${imageId}`);
+          const image = await response.json();
+          await navigator.clipboard.writeText(image.caption);
+
+          // Then trigger download
           window.location.href = `/api/images/${imageId}`;
 
           toast({
-            title: "Image ready",
-            description: "Your image is being downloaded",
+            title: "Ready to share!",
+            description: "Image downloading and caption copied to clipboard",
+            duration: 5000,
           });
         } catch (error) {
           toast({
