@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -20,23 +19,15 @@ export default function SharePage() {
           const caption = image.caption;
 
           // Fetch and save the image
-          const imgResponse = await fetch(imageUrl);
-          const blob = await imgResponse.blob();
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
 
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // For mobile devices
-            const file = new File([blob], 'instagram-photo.jpg', { type: 'image/jpeg' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'instagram-photo.jpg';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
+            // For mobile devices - direct download
+            window.location.href = url;
           } else {
             // For desktop
-            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'instagram-photo.jpg';
