@@ -16,16 +16,12 @@ function SharePageContent() {
           const image = await response.json();
           const imageUrl = image.originalUrl;
 
-          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.location.href = imageUrl;
-          } else {
-            const a = document.createElement('a');
-            a.href = imageUrl;
-            a.download = 'instagram-photo.jpg';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          }
+          const a = document.createElement('a');
+          a.href = imageUrl;
+          a.download = 'instagram-photo.jpg';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
 
           toast({
             title: "Image ready",
