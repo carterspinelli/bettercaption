@@ -99,6 +99,12 @@ export function registerRoutes(app: Express): Server {
     res.json(images);
   });
 
+  app.get("/api/images/:id", async (req, res) => {
+    const image = await storage.getImage(parseInt(req.params.id));
+    if (!image) return res.status(404).send("Image not found");
+    res.json(image);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

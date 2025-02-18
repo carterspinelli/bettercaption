@@ -24,8 +24,35 @@ export default function SharePage() {
           const url = window.URL.createObjectURL(blob);
 
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // For mobile devices - direct download
-            window.location.href = url;
+            // For mobile devices - show image
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.style.width = '100%';
+            img.style.maxWidth = '500px';
+            document.body.innerHTML = '';
+            document.body.style.display = 'flex';
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+            document.body.style.padding = '20px';
+            document.body.appendChild(img);
+            
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.innerText = 'Save Image';
+            downloadBtn.style.position = 'fixed';
+            downloadBtn.style.bottom = '20px';
+            downloadBtn.style.padding = '10px 20px';
+            downloadBtn.style.backgroundColor = '#000';
+            downloadBtn.style.color = '#fff';
+            downloadBtn.style.border = 'none';
+            downloadBtn.style.borderRadius = '5px';
+            downloadBtn.onclick = () => {
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'instagram-photo.jpg';
+              link.click();
+            };
+            document.body.appendChild(downloadBtn);
           } else {
             // For desktop
             const a = document.createElement('a');
