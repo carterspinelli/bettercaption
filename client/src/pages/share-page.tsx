@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,14 +13,15 @@ export default function SharePage() {
 
       if (imageId) {
         try {
+          // Fetch image details
           const response = await fetch(`/api/images/${imageId}`);
           const image = await response.json();
           const imageUrl = image.originalUrl;
           const caption = image.caption;
-        try {
+
           // Fetch and save the image
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
+          const imgResponse = await fetch(imageUrl);
+          const blob = await imgResponse.blob();
 
           if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             // For mobile devices
@@ -58,6 +60,7 @@ export default function SharePage() {
             description: "There was a problem preparing your share. Please try again.",
             variant: "destructive",
           });
+          console.error('Share error:', error);
         }
       }
     };
