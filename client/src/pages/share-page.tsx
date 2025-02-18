@@ -9,10 +9,14 @@ export default function SharePage() {
   
   useEffect(() => {
     const handleShare = async () => {
-      const imageUrl = searchParams.get('imageUrl');
-      const caption = searchParams.get('caption');
+      const imageId = searchParams.get('id');
       
-      if (imageUrl && caption) {
+      if (imageId) {
+        try {
+          const response = await fetch(`/api/images/${imageId}`);
+          const image = await response.json();
+          const imageUrl = image.originalUrl;
+          const caption = image.caption;
         try {
           // Fetch and save the image
           const response = await fetch(imageUrl);
