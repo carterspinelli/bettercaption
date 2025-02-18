@@ -102,7 +102,11 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/images/:id", async (req, res) => {
     const image = await storage.getImage(parseInt(req.params.id));
     if (!image) return res.status(404).send("Image not found");
-    res.json(image);
+
+    //Improved response for better client-side handling of "Save to Photos"
+    res.setHeader('Content-Type', image.originalUrl.split(';')[0]); //Set correct content type
+    res.setHeader('Content-Disposition', `attachment; filename="${image.caption}.jpg"`); //Use caption for filename
+    res.send(Buffer.from(image.originalUrl.split(',')[1], 'base64'));
   });
 
   const httpServer = createServer(app);
