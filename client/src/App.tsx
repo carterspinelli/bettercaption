@@ -12,9 +12,11 @@ import { SharePage } from "./pages/share-page"; // Added import
 function Router() {
   return (
     <Routes>
-      <ProtectedRoute path="/" element={<HomePage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<HomePage />} />
+      </Route>
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/share" element={<SharePage />} /> {/* Added share route */}
+      <Route path="/share" element={<SharePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
