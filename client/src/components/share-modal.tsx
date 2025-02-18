@@ -44,7 +44,7 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
           <QRCodeSVG
-            value={window.location.href}
+            value={`${window.location.origin}/share?imageUrl=${encodeURIComponent(image.originalUrl)}&caption=${encodeURIComponent(image.caption)}`}
             size={256}
             level="M"
             includeMargin={true}
