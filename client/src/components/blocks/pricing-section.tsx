@@ -20,11 +20,11 @@ export function PricingSection({
   const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0])
 
   return (
-    <section className="flex flex-col items-center gap-10 py-10">
-      <div className="space-y-7 text-center">
-        <div className="space-y-4">
-          <h1 className="text-4xl font-medium md:text-5xl">{title}</h1>
-          <p className="text-muted-foreground">{subtitle}</p>
+    <section className="flex flex-col items-center gap-6 py-6">
+      <div className="space-y-4 text-center">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-medium md:text-4xl">{title}</h1>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <div className="mx-auto flex w-fit rounded-full bg-muted p-1">
           {frequencies.map((freq) => (
