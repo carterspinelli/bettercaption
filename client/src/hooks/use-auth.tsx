@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Welcome back!",
         description: `Logged in as ${user.username}`,
       });
+      setLocation("/dashboard"); 
     },
     onError: (error: Error) => {
       toast({
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Welcome!",
         description: `Account created for ${user.username}`,
       });
+      setLocation("/dashboard"); 
     },
     onError: (error: Error) => {
       toast({
