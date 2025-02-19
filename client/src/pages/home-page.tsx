@@ -8,6 +8,7 @@ import { LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -20,92 +21,34 @@ export default function HomePage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      console.log("Starting upload for file:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      });
-
-      // Pre-upload auth check
-      const authCheck = await fetch("/api/user", {
-        credentials: "include",
-      });
-
-      if (!authCheck.ok) {
-        console.error("Auth check failed:", {
-          status: authCheck.status,
-          statusText: authCheck.statusText
-        });
-        throw new Error("Authentication failed - please log in again");
-      }
-
       const formData = new FormData();
       formData.append("image", file);
 
-      try {
-        // Add a timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const res = await fetch(`/api/images?t=${timestamp}`, {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
+      const res = await fetch("/api/images", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("Upload failed:", {
-            status: res.status,
-            statusText: res.statusText,
-            error: errorText,
-            headers: Object.fromEntries(res.headers.entries())
-          });
-
-          if (res.status === 401) {
-            throw new Error("Session expired - please log in again");
-          }
-          throw new Error(errorText || "Failed to upload image");
-        }
-
-        const data = await res.json();
-        console.log("Upload successful:", data);
-        return data;
-      } catch (error: any) {
-        console.error("Upload error:", {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        throw error;
+      if (!res.ok) {
+        throw new Error("Failed to upload image");
       }
+
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/images"] });
       toast({
         title: "Image uploaded!",
-        description: "Your image has been successfully uploaded and enhanced.",
+        description: "Your image has been successfully uploaded.",
       });
     },
     onError: (error: Error) => {
-      console.error("Upload mutation error:", error);
-
       toast({
         title: "Upload failed",
         description: error.message,
         variant: "destructive",
       });
-
-      // Handle authentication errors by redirecting to login
-      if (error.message.toLowerCase().includes("log in")) {
-        toast({
-          title: "Session expired",
-          description: "Please log in again to continue",
-        });
-        setLocation("/auth");
-      }
     },
   });
 
@@ -115,6 +58,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Bettercaption</h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <span className="text-sm text-muted-foreground">
               {user?.username}
             </span>
