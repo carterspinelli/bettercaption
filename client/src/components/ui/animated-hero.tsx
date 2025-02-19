@@ -73,7 +73,7 @@ function Hero() {
               className="gap-4"
               onClick={() => setLocation("/auth")}
             >
-              Get Started <ImagePlus className="w-4 h-4" />
+              Get Started Now <ImagePlus className="w-4 h-4" />
             </Button>
           </div>
         </div>
