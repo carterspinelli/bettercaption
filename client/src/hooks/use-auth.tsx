@@ -1,5 +1,5 @@
-// Using use-auth.tsx from javascript_auth_all_persistance blueprint
 import { createContext, ReactNode, useContext } from "react";
+import { useLocation } from "wouter";
 import {
   useQuery,
   useMutation,
@@ -24,6 +24,8 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
   const {
     data: user,
     error,
@@ -44,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Welcome back!",
         description: `Logged in as ${user.username}`,
       });
-      setLocation("/dashboard"); 
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Welcome!",
         description: `Account created for ${user.username}`,
       });
-      setLocation("/dashboard"); 
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Goodbye!",
         description: "You have been logged out",
       });
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
