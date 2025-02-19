@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MoveRight, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 
 function Hero() {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -33,7 +32,7 @@ function Hero() {
           </div>
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-2xl tracking-tighter text-center font-regular">
-              <span className="text-primary">Bettercaption</span>
+              <span className="text-primary">Make your photos</span>
               <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
                 &nbsp;
                 {titles.map((title, index) => (
@@ -67,11 +66,9 @@ function Hero() {
             </p>
           </div>
           <div className="flex flex-row gap-3">
-            <Link href="/auth">
-              <Button size="lg" className="gap-4">
-                Get Started <ImagePlus className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button size="lg" className="gap-4">
+              Get Started <ImagePlus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
