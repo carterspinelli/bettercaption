@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MoveRight, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 
 function Hero() {
-  const [, setLocation] = useLocation();
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
     () => ["enhanced", "captivating", "Instagram-ready", "AI-powered", "professional"],
@@ -68,13 +67,14 @@ function Hero() {
             </p>
           </div>
           <div className="flex flex-row gap-3">
-            <Button 
-              size="lg" 
-              className="gap-4"
-              onClick={() => setLocation("/auth")}
-            >
-              Get Started Now <ImagePlus className="w-4 h-4" />
-            </Button>
+            <Link href="/auth">
+              <Button 
+                size="lg" 
+                className="gap-4"
+              >
+                Get Started Now <ImagePlus className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
