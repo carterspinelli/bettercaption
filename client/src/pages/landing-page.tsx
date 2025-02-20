@@ -129,7 +129,7 @@ export default function LandingPage() {
           { href: "/cookies", label: "Cookie Policy" },
         ]}
         copyright={{
-          text: "© 2024 Bettercaption",
+          text: "© 2025 Bettercaption",
           license: "All rights reserved",
         }}
       />
