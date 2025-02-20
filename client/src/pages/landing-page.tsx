@@ -1,6 +1,8 @@
 import { Hero } from "@/components/ui/animated-hero";
 import { PricingSection } from "@/components/blocks/pricing-section";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Footer } from "@/components/ui/footer";
+import { Image, Github, Twitter, Instagram } from "lucide-react";
 
 export const PAYMENT_FREQUENCIES = ["monthly", "yearly"];
 
@@ -95,6 +97,42 @@ export default function LandingPage() {
           tiers={TIERS}
         />
       </div>
+      <Footer
+        logo={<Image className="h-10 w-10" />}
+        brandName="Bettercaption"
+        socialLinks={[
+          {
+            icon: <Instagram className="h-5 w-5" />,
+            href: "https://instagram.com",
+            label: "Instagram",
+          },
+          {
+            icon: <Twitter className="h-5 w-5" />,
+            href: "https://twitter.com",
+            label: "Twitter",
+          },
+          {
+            icon: <Github className="h-5 w-5" />,
+            href: "https://github.com",
+            label: "GitHub",
+          },
+        ]}
+        mainLinks={[
+          { href: "/features", label: "Features" },
+          { href: "/pricing", label: "Pricing" },
+          { href: "/blog", label: "Blog" },
+          { href: "/support", label: "Support" },
+        ]}
+        legalLinks={[
+          { href: "/privacy", label: "Privacy Policy" },
+          { href: "/terms", label: "Terms of Service" },
+          { href: "/cookies", label: "Cookie Policy" },
+        ]}
+        copyright={{
+          text: "© 2024 Bettercaption",
+          license: "All rights reserved",
+        }}
+      />
     </div>
   );
 }
