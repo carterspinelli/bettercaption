@@ -29,8 +29,9 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  console.log('Current session secret:', process.env.SESSION_SECRET);
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.REPL_ID!,
+    secret: process.env.SESSION_SECRET || process.env.REPL_ID || 'steve-jobs-was-cool-7-+',
     resave: true,
     saveUninitialized: true,
     store: storage.sessionStore,
@@ -39,15 +40,17 @@ export function setupAuth(app: Express) {
       secure: false,
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
-      sameSite: 'none', // Changed to 'none' to support cross-origin requests on mobile
+      sameSite: app.get("env") === "development" ? 'lax' : 'none',  // Use 'lax' for local development
       path: '/',
     }
   };
-
+  
+  // Update the production settings
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
     if (sessionSettings.cookie) {
-      sessionSettings.cookie.secure = true;
+      sessionSettings.cookie.secure = true;  // Only use secure in production
+      sessionSettings.cookie.sameSite = 'none';  // Use none in production for cross-origin
     }
   }
 
