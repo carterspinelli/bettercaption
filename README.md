@@ -31,6 +31,6 @@ Bettercaption is a web-based AI-powered image enhancement and social media shari
 3. Set up environment variables
 4. Run the development server: `npm run dev`
 
-## 📄 License
+## License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
