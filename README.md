@@ -22,7 +22,7 @@ Bettercaption is a web-based AI-powered image enhancement and social media shari
 
 ## Preview
 
-![Screenshot 2025-02-24 at 10 13 07 p m](https://github.com/user-attachments/assets/b88c2b78-0236-4eca-a981-fc0ad7cf93c7)
+![Screenshot 2025-02-24 at 10 15 09 p m](https://github.com/user-attachments/assets/9adf7237-652f-4b0b-8be4-23bb4cb245d5)
 
 ## Getting Started
 
