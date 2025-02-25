@@ -1,19 +1,17 @@
-# 🖼️ Bettercaption
-
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-blue?style=flat&logo=discord)](https://discord.gg/your-invite-link)
+# Bettercaption
 
 Bettercaption is a web-based AI-powered image enhancement and social media sharing platform built with React.js, TypeScript, and the Shadcn UI library. It provides intelligent content creation tools with cross-platform functionality.
 
-## ✨ Features
+## Features
 
-- 🤖 AI-powered image enhancement and caption generation
-- 📱 Cross-platform image upload and sharing
-- 🌓 Dark mode and theme customization
-- 💳 Tiered pricing model with flexible service levels
-- 🔒 Secure user authentication
-- 📊 Analytics and performance tracking
+- AI-powered image enhancement and caption generation
+- Cross-platform image upload and sharing
+- Dark mode and theme customization
+- Tiered pricing model with flexible service levels
+- Secure user authentication
+- Analytics and performance tracking
 
-## 🎯 Key Technologies
+## Key Technologies
 
 - **Frontend**: React.js with TypeScript
 - **UI Framework**: Shadcn UI + Tailwind CSS
@@ -22,11 +20,11 @@ Bettercaption is a web-based AI-powered image enhancement and social media shari
 - **Authentication**: Secure session management
 - **Database**: PostgreSQL
 
-## 📸 Preview
+## Preview
 
-![Bettercaption Landing Page](./attached_assets/IMG_3068.JPG)
+![Screenshot 2025-02-24 at 10 13 07 p m](https://github.com/user-attachments/assets/b88c2b78-0236-4eca-a981-fc0ad7cf93c7)
 
-## 🚀 Getting Started
+## Getting Started
 
 1. Clone the repository
 2. Install dependencies: `npm install`
