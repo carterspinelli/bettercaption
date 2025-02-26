@@ -1,53 +1,40 @@
+import { useState } from "react";
 import { Link } from "wouter";
-import { LogIn, ImageIcon } from "lucide-react" // Added ImageIcon import
-import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
-import { UserNav } from "@/components/user-nav"
-//import { BettercaptionLogo } from "@/components/logos" // Removed unnecessary import
-import { useSession } from 'next-auth/react'
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ImageIcon, Menu } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useAuth } from "@/hooks/use-auth";
 
-interface MainHeaderProps {
-  user?: any
-}
-
-export function MainHeader({ user }: MainHeaderProps) {
+export function MainHeader() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
 
   const navItems = [
     {
-      name: 'Home',
-      href: '/',
+      name: "Home",
+      href: "/",
     },
     {
-      name: 'Features',
-      href: '/features',
+      name: "Features",
+      href: "/#features",
     },
     {
-      name: 'Pricing',
-      href: '/#pricing',
+      name: "Pricing",
+      href: "/#pricing",
     },
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: "Dashboard",
+      href: "/dashboard",
     },
-  ]
+  ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         {/* Logo - Left aligned */}
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-2">
-            {/* Replaced BettercaptionLogo with ImageIcon */}
             <ImageIcon className="h-6 w-6" /> 
             <span className="font-bold">Bettercaption</span>
           </Link>
@@ -55,7 +42,7 @@ export function MainHeader({ user }: MainHeaderProps) {
 
         {/* Navigation - Center aligned */}
         <div className="flex flex-1 items-center justify-center">
-          <nav className="flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item, i) => (
               <Link 
                 key={i} 
@@ -72,27 +59,81 @@ export function MainHeader({ user }: MainHeaderProps) {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
 
-          {/* Auth Buttons */}
-          <div className="flex items-center space-x-2">
+          {/* Auth Buttons - Only visible on desktop */}
+          <div className="hidden md:flex items-center space-x-2">
             {user ? (
               <Link href="/dashboard">
                 <Button size="sm">Dashboard</Button>
               </Link>
             ) : (
               <>
-                <Link href="/login" className="flex items-center">
+                <Link href="/auth">
                   <Button variant="ghost" size="sm">
                     Log in
                   </Button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/auth">
                   <Button size="sm">Get Started</Button>
                 </Link>
               </>
             )}
           </div>
+
+          {/* Mobile Menu Button - Only visible on mobile */}
+          <div className="md:hidden">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col py-6">
+                  <div className="flex items-center mb-6">
+                    <ImageIcon className="h-6 w-6 mr-2" />
+                    <span className="font-bold">Bettercaption</span>
+                  </div>
+                  <nav className="flex flex-col space-y-4">
+                    {navItems.map((item, i) => (
+                      <Link
+                        key={i}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className="text-sm font-medium py-2 transition-colors hover:text-primary"
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </nav>
+                  <div className="mt-auto pt-6 border-t">
+                    {user ? (
+                      <Link href="/dashboard" onClick={() => setOpen(false)}>
+                        <Button className="w-full" size="sm">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    ) : (
+                      <div className="flex flex-col space-y-2">
+                        <Link href="/auth" onClick={() => setOpen(false)}>
+                          <Button variant="outline" className="w-full" size="sm">
+                            Log in
+                          </Button>
+                        </Link>
+                        <Link href="/auth" onClick={() => setOpen(false)}>
+                          <Button className="w-full" size="sm">
+                            Get Started
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>
-  )
+  );
 }
