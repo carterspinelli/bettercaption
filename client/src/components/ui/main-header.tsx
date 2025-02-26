@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { LogIn } from "lucide-react"
+import { LogIn, ImageIcon } from "lucide-react" // Added ImageIcon import
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { UserNav } from "@/components/user-nav"
-import { BettercaptionLogo } from "@/components/logos"
+//import { BettercaptionLogo } from "@/components/logos" // Removed unnecessary import
 import { useSession } from 'next-auth/react'
 
 interface MainHeaderProps {
@@ -47,7 +47,8 @@ export default function MainHeader({ user }: MainHeaderProps) {
         {/* Logo - Left aligned */}
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-2">
-            <BettercaptionLogo className="h-6 w-6" />
+            {/* Replaced BettercaptionLogo with ImageIcon */}
+            <ImageIcon className="h-6 w-6" /> 
             <span className="font-bold">Bettercaption</span>
           </Link>
         </div>
