@@ -31,9 +31,9 @@ export function MainHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container mx-auto flex h-14 items-center">
         {/* Logo - Left aligned */}
-        <div className="mr-4 flex">
+        <div className="mr-4 flex md:w-1/4 justify-start">
           <Link href="/" className="flex items-center space-x-2">
             <ImageIcon className="h-6 w-6" /> 
             <span className="font-bold">Bettercaption</span>
@@ -41,8 +41,8 @@ export function MainHeader() {
         </div>
 
         {/* Navigation - Center aligned */}
-        <div className="flex flex-1 items-center justify-center">
-          <nav className="hidden md:flex items-center space-x-6">
+        <div className="flex-1 items-center justify-center hidden md:flex md:w-2/4">
+          <nav className="flex items-center space-x-6">
             {navItems.map((item, i) => (
               <Link 
                 key={i} 
@@ -56,7 +56,7 @@ export function MainHeader() {
         </div>
 
         {/* Right side controls */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-end space-x-4 md:w-1/4 ml-auto">
           <ThemeToggle />
 
           {/* Auth Buttons - Only visible on desktop */}
@@ -90,7 +90,7 @@ export function MainHeader() {
               </SheetTrigger>
               <SheetContent side="right">
                 <div className="flex flex-col py-6">
-                  <div className="flex items-center mb-6">
+                  <div className="flex items-center justify-center mb-6">
                     <ImageIcon className="h-6 w-6 mr-2" />
                     <span className="font-bold">Bettercaption</span>
                   </div>
@@ -100,7 +100,7 @@ export function MainHeader() {
                         key={i}
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        className="text-sm font-medium py-2 transition-colors hover:text-primary"
+                        className="text-sm font-medium py-2 transition-colors hover:text-primary text-center"
                       >
                         {item.name}
                       </Link>
