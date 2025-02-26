@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { Image } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ interface ShareModalProps {
 
 export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
   const { toast } = useToast();
-  
+
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = image.originalUrl;
@@ -21,7 +21,7 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast({
       title: "Photo downloaded",
       description: "The photo has been saved to your device",
@@ -41,6 +41,9 @@ export function ShareModal({ isOpen, onClose, image }: ShareModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share to Instagram</DialogTitle>
+          <DialogDescription>
+            Follow these steps to share your enhanced image
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
           <QRCodeSVG
