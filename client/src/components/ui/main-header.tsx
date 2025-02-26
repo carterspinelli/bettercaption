@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Image as ImageIcon, Wand2, CreditCard, Upload, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function MainHeader() {
   const { user } = useAuth();
@@ -35,7 +36,10 @@ export function MainHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="absolute right-4 top-2 z-50">
+        <ThemeToggle />
+      </div>
+      <div className="container flex h-16 items-center justify-between pt-2">
         <div className="flex items-center gap-2">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer">

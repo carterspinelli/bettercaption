@@ -1,6 +1,5 @@
 import { Hero } from "@/components/ui/animated-hero";
 import { PricingSection } from "@/components/blocks/pricing-section";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Footer } from "@/components/ui/footer";
 import { Image, Github, Twitter, Instagram } from "lucide-react";
 import { MainHeader } from "@/components/ui/main-header";
@@ -84,9 +83,6 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <MainHeader />
-      <div className="fixed top-0 right-0 p-4 z-50">
-        <ThemeToggle />
-      </div>
       <Hero />
       <div className="relative">
         <div className="absolute inset-0 -z-10">
