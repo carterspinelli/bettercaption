@@ -65,7 +65,7 @@ export function MainHeader() {
         </div>
 
         {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4 pr-1">
+        <div className="hidden md:flex items-center gap-4 pr-2">
           {user ? (
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
