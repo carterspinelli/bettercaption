@@ -36,34 +36,33 @@ export function MainHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="absolute right-4 top-2 z-50">
-        <ThemeToggle />
-      </div>
-      <div className="container flex h-16 items-center justify-between pt-2">
+      <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/">
-            <div className="flex items-center gap-2 cursor-pointer">
-              <ImageIcon className="h-6 w-6" />
-              <span className="font-bold text-xl">Bettercaption</span>
+            <div className="flex items-center gap-1.5 cursor-pointer">
+              <ImageIcon className="h-5 w-5" />
+              <span className="font-bold text-lg">Bettercaption</span>
             </div>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          {navItems.map((item, i) => (
-            <Link 
-              key={i} 
-              href={item.link}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-1.5"
-              )}
-            >
-              {item.icon}
-              {item.name}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center space-x-4">
+            {navItems.map((item, i) => (
+              <Link 
+                key={i} 
+                href={item.link}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary"
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+          <ThemeToggle />
+        </div>
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-4">
