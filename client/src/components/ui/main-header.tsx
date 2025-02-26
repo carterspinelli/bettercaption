@@ -47,8 +47,8 @@ export function MainHeader() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="flex items-center gap-4">
-          <nav className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center justify-center gap-4 flex-1">
+          <nav className="flex items-center space-x-4">
             {navItems.map((item, i) => (
               <Link 
                 key={i} 
@@ -61,11 +61,12 @@ export function MainHeader() {
               </Link>
             ))}
           </nav>
+          </div>
           <ThemeToggle />
-        </div>
+        
 
         {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4 pr-2">
+        <div className="hidden md:flex items-center gap-4 pr-2 flex-1 justify-end">
           {user ? (
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
