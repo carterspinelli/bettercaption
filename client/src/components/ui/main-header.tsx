@@ -39,7 +39,7 @@ export function MainHeader() {
       <div className="container flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link href="/">
-            <div className="flex items-center gap-1.5 cursor-pointer pl-1">
+            <div className="flex items-center gap-1.5 cursor-pointer pl-2">
               <ImageIcon className="h-5 w-5" />
               <span className="font-bold text-lg">Bettercaption</span>
             </div>
