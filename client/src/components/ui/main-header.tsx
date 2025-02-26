@@ -36,10 +36,10 @@ export function MainHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
+      <div className="container flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link href="/">
-            <div className="flex items-center gap-1.5 cursor-pointer">
+            <div className="flex items-center gap-1.5 cursor-pointer pl-1">
               <ImageIcon className="h-5 w-5" />
               <span className="font-bold text-lg">Bettercaption</span>
             </div>
@@ -65,7 +65,7 @@ export function MainHeader() {
         </div>
 
         {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4 pr-1">
           {user ? (
             <Link href="/dashboard">
               <Button size="sm">Dashboard</Button>
