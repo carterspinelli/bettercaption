@@ -20,7 +20,7 @@ interface MainHeaderProps {
   user?: any
 }
 
-export default function MainHeader({ user }: MainHeaderProps) {
+export function MainHeader({ user }: MainHeaderProps) {
 
   const navItems = [
     {
