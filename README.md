@@ -20,28 +20,11 @@ Bettercaption is an AI-powered image enhancement and social media sharing web ap
 #### 1. Add OpenAI API Key
 To use the image enhancement and caption generation features, you need an OpenAI API key:
 
-**For Replit:**
-- Run this command in the Replit Shell:
-```
-ask_secrets(
-    secret_keys=["OPENAI_API_KEY"],
-    user_message="Please provide your OpenAI API key to enable AI image enhancement and caption generation features."
-)
-```
-
-**For local development:**
 - Create a `.env` file in the root directory
 - Add your OpenAI API key: `OPENAI_API_KEY=your_key_here`
 
 #### 2. Create PostgreSQL Database
 
-**For Replit:**
-- Run this command in the Replit Shell:
-```
-create_postgresql_database_tool()
-```
-
-**For local development:**
 - Install PostgreSQL on your machine
 - Create a database and add the connection details to your `.env` file:
 ```
