@@ -18,6 +18,10 @@ Bettercaption is an AI-powered image enhancement and social media sharing web ap
 ### Prerequisites
 
 #### 1. Add OpenAI API Key
+To use the image enhancement and caption generation features, you need an OpenAI API key:
+
+**For Replit:**
+- Run this command in the Replit Shell:
 ```
 ask_secrets(
     secret_keys=["OPENAI_API_KEY"],
@@ -25,12 +29,27 @@ ask_secrets(
 )
 ```
 
+**For local development:**
+- Create a `.env` file in the root directory
+- Add your OpenAI API key: `OPENAI_API_KEY=your_key_here`
+
 #### 2. Create PostgreSQL Database
+
+**For Replit:**
+- Run this command in the Replit Shell:
 ```
 create_postgresql_database_tool()
 ```
 
+**For local development:**
+- Install PostgreSQL on your machine
+- Create a database and add the connection details to your `.env` file:
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/bettercaption
+```
+
 #### 3. Initialize Database Schema
+Run this command to set up the database tables:
 ```
 npm run db:push
 ```
