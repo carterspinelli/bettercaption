@@ -6,10 +6,8 @@ Bettercaption is an AI-powered image enhancement and social media sharing web ap
 - React.js frontend with responsive mobile design
 - Node.js backend with robust authentication
 - OpenAI API for intelligent image processing
-- Dark mode and theme toggle support
+- Secrets management for API key integration
 - Cross-platform image upload and sharing capabilities
-- Comprehensive pricing model with tiered service levels
-- Mobile-friendly responsive header with side navigation
 
 ## Preview
 
@@ -22,8 +20,8 @@ Bettercaption is an AI-powered image enhancement and social media sharing web ap
 #### 1. Add OpenAI API Key
 ```
 ask_secrets(
-  secret_keys=["OPENAI_API_KEY"],
-  user_message="Please provide your OpenAI API key to enable AI image enhancement and caption generation features."
+    secret_keys=["OPENAI_API_KEY"],
+    user_message="Please provide your OpenAI API key to enable AI image enhancement and caption generation features."
 )
 ```
 
