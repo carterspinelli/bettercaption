@@ -98,12 +98,18 @@ export function setupAuth(app: Express) {
 
   // Instagram authentication strategy
   if (process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET) {
+    // Get the public URL from environment or use a default for Replit
+    const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_SLUG || 'this-repl'}.${process.env.REPL_OWNER || 'repl.co'}.repl.co`;
+    const callbackUrl = `${appUrl}/api/auth/instagram/callback`;
+
+    console.log('Instagram callback URL:', callbackUrl);
+
     passport.use(
       new InstagramStrategy(
         {
           clientID: process.env.INSTAGRAM_CLIENT_ID,
           clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
-          callbackURL: `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/instagram/callback`,
+          callbackURL: callbackUrl,
           scope: ['user_profile', 'user_media'],
         },
         async (accessToken, refreshToken, profile, done) => {
