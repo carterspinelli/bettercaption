@@ -25,7 +25,21 @@ export async function analyzeImage(imageBuffer: Buffer, userId?: number): Promis
         // Use Instaloader-based analysis if the user is connected via username
         if (!user.instagramToken && user.instagramUsername) {
           const instagramAnalysis = await analyzeUserStyle(user.instagramUsername, userId);
-          systemMessage = enhanceCaptionPrompt(systemMessage, userId, instagramAnalysis);
+
+          // Enhanced prompt with detailed style information
+          const styleDetails = `
+          Based on the user's Instagram profile analysis:
+          - Caption Style: ${instagramAnalysis.captionStyles.join(', ')}
+          - Common Themes: ${instagramAnalysis.commonThemes.join(', ')}
+          - Preferred Caption Length: ${instagramAnalysis.captionLengthPreference}
+          - Emoji Usage: ${instagramAnalysis.emojiUsage}
+          - Caption Tone: ${instagramAnalysis.captionTone.join(', ')}
+          - Hashtags Per Post: ${instagramAnalysis.hashtagsPerPost.toFixed(1)}
+
+          Generate a caption that reflects this personal style. If they use many emojis, include emojis. Match their typical caption length and tone. Incorporate themes they commonly post about if relevant to the image. If they use hashtags heavily, include 3-5 relevant hashtags at the end of the caption.
+          `;
+
+          systemMessage = systemMessage + styleDetails;
         } else {
           // Use original OAuth-based analysis if the user has a token
           const instagramAnalysis = await analyzeInstagramStyle(userId);

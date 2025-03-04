@@ -5,6 +5,7 @@ import { UploadZone } from "@/components/upload-zone";
 import { EnhancedImageCard } from "@/components/enhanced-image-card";
 import { Button } from "@/components/ui/button";
 import { InstagramConnectButton } from "@/components/instagram-connect-button";
+import { InstagramStylePreview } from "@/components/instagram-style-preview";
 import { LogOut, Info } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -77,20 +78,25 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Instagram Connect Section */}
-          <div className="bg-card rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center mb-4">
-              <h2 className="text-lg font-semibold">Instagram Integration</h2>
-              <div className="relative ml-2 group">
-                <Info className="h-4 w-4 text-muted-foreground" />
-                <div className="absolute left-0 -top-2 transform -translate-y-full w-64 p-2 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
-                  Connect your Instagram account to generate captions that match your personal style and get better engagement!
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-card rounded-lg p-6 shadow-sm border">
+              <div className="flex items-center mb-4">
+                <h2 className="text-lg font-semibold">Instagram Integration</h2>
+                <div className="relative ml-2 group">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                  <div className="absolute left-0 -top-2 transform -translate-y-full w-64 p-2 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
+                    Connect your Instagram account to generate captions that match your personal style and get better engagement!
+                  </div>
                 </div>
               </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Connect your Instagram account to personalize your captions based on your posting style and improve engagement.
+              </p>
+              <InstagramConnectButton />
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Connect your Instagram account to personalize your captions based on your posting style and improve engagement.
-            </p>
-            <InstagramConnectButton />
+
+            {/* Instagram Style Preview */}
+            <InstagramStylePreview />
           </div>
 
           <UploadZone

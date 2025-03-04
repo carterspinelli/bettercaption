@@ -123,6 +123,25 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // New endpoint to get Instagram style profile
+  app.get("/api/instagram/style-profile", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user || !user.instagramConnected || !user.instagramUsername) {
+        return res.status(404).json({ message: "Instagram account not connected" });
+      }
+
+      // Analyze the user's Instagram style
+      const styleProfile = await analyzeUserStyle(user.instagramUsername, user.id);
+      res.json(styleProfile);
+    } catch (error: any) {
+      console.error('Error fetching Instagram style profile:', error);
+      res.status(500).send(error.message || "Failed to fetch Instagram style profile");
+    }
+  });
+
   // Create a dedicated endpoint to handle the Instagram OAuth callback
   app.get("/dashboard", async (req, res, next) => {
     // This route handles both normal dashboard requests and Instagram OAuth redirects
