@@ -33,22 +33,30 @@ export async function fetchPostsByUsername(username: string, userId: number, lim
     // We're just getting metadata (--no-pictures --no-videos) as we only need captions
     const command = `instaloader --no-pictures --no-videos --no-video-thumbnails --no-captions --no-profile-pic --count ${limit} -- ${username}`;
 
-    const { stdout, stderr } = await execAsync(command, { cwd: TEMP_DIR });
+    try {
+      const { stdout, stderr } = await execAsync(command, { cwd: TEMP_DIR });
 
-    if (stderr && !stderr.includes('Warning')) {
-      console.error('Instaloader error:', stderr);
-      throw new Error(`Failed to fetch Instagram posts: ${stderr}`);
+      if (stderr && !stderr.includes('Warning')) {
+        console.error('Instaloader error:', stderr);
+        // We'll log the error but not throw - we want to continue with whatever posts we found
+        if (stderr.includes('401 Unauthorized')) {
+          console.warn('Instagram rate limiting detected. Will continue with available data.');
+        }
+      }
+
+      console.log('Instaloader output:', stdout);
+    } catch (error) {
+      // Log but continue - we may have partial data
+      console.error('Instaloader command failed, but continuing with available data:', error);
     }
 
-    console.log('Instaloader output:', stdout);
-
-    // Process the downloaded files
+    // Process any downloaded files, even if the command failed
     await processDownloadedPosts(username, userId);
 
-    console.log(`Successfully fetched and processed posts for ${username}`);
+    console.log(`Processed posts for ${username}`);
   } catch (error) {
-    console.error('Error fetching Instagram posts with Instaloader:', error);
-    throw new Error(`Failed to fetch Instagram posts for ${username}: ${(error as Error).message}`);
+    console.error('Error in fetchPostsByUsername:', error);
+    // We don't throw here - we want the calling function to continue
   }
 }
 
@@ -58,7 +66,9 @@ async function processDownloadedPosts(username: string, userId: number): Promise
 
   // Check if directory exists
   if (!fs.existsSync(userDir)) {
-    throw new Error(`No data found for user ${username}`);
+    console.log(`No data directory found for user ${username}, creating empty one`);
+    fs.mkdirSync(userDir, { recursive: true });
+    return; // No files to process
   }
 
   const files = fs.readdirSync(userDir);

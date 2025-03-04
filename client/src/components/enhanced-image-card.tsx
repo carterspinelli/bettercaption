@@ -7,6 +7,13 @@ import { InstagramShareButton } from "./instagram-share-button";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { useQuery } from "@tanstack/react-query";
 
+interface InstagramProfileResponse {
+  connected: boolean;
+  username?: string;
+  expiresAt?: string;
+  message?: string;
+}
+
 interface EnhancedImageCardProps {
   image: Image;
 }
@@ -15,7 +22,7 @@ export function EnhancedImageCard({ image }: EnhancedImageCardProps) {
   const { toast } = useToast();
 
   // Check if user has Instagram connected to show personalization badge
-  const { data: instagramProfile } = useQuery({
+  const { data: instagramProfile } = useQuery<InstagramProfileResponse>({
     queryKey: ['/api/instagram/profile'],
     retry: false,
     refetchOnWindowFocus: false,

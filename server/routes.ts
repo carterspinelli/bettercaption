@@ -291,15 +291,44 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("Instagram account not connected");
       }
 
-      await fetchPostsByUsername(user.instagramUsername, user.id);
+      try {
+        await fetchPostsByUsername(user.instagramUsername, user.id);
 
-      return res.status(200).json({
-        success: true,
-        message: "Successfully refreshed Instagram posts"
-      });
+        // Get the refreshed posts to see if we have any
+        const posts = await storage.getInstagramPosts(user.id);
+
+        if (posts.length === 0) {
+          // We didn't get any posts, but we don't want to fail the whole request
+          return res.status(200).json({
+            success: true,
+            partial: true,
+            message: "Instagram connection is active, but we couldn't retrieve posts. Your generated captions will use a default style profile.",
+            posts: []
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: `Successfully refreshed Instagram data with ${posts.length} posts`,
+          posts: posts.length
+        });
+      } catch (error: any) {
+        console.error("Error in post refresh process:", error);
+        // Don't fail the whole request, return a partial success
+        return res.status(200).json({
+          success: true,
+          partial: true,
+          message: "Instagram connection is active, but we couldn't fully refresh your posts. Your personalized captions will still work with existing data.",
+          error: error.message
+        });
+      }
     } catch (error: any) {
-      console.error("Error refreshing Instagram posts:", error);
-      return res.status(500).send(error.message || "An error occurred while refreshing Instagram posts");
+      console.error("Error in refresh posts endpoint:", error);
+      return res.status(500).json({
+        success: false,
+        message: "An unexpected error occurred while refreshing Instagram posts",
+        error: error.message
+      });
     }
   });
 

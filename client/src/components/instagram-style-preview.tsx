@@ -6,6 +6,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface InstagramProfileResponse {
+  connected: boolean;
+  username?: string;
+  expiresAt?: string;
+  message?: string;
+}
+
 interface StyleProfileResponse {
   captionStyles: string[];
   commonThemes: string[];
@@ -27,7 +34,7 @@ export function InstagramStylePreview() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Query Instagram profile to see if connected
-  const { data: instagramProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: instagramProfile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
     queryKey: ['/api/instagram/profile'],
     retry: false,
     refetchOnWindowFocus: false,
@@ -56,11 +63,20 @@ export function InstagramStylePreview() {
 
       return await res.json();
     },
-    onSuccess: () => {
-      toast({
-        title: 'Instagram Posts Refreshed',
-        description: 'Your Instagram style information has been updated.',
-      });
+    onSuccess: (data) => {
+      if (data.partial) {
+        // Partial success scenario
+        toast({
+          title: 'Instagram Posts Partially Refreshed',
+          description: data.message,
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Instagram Posts Refreshed',
+          description: 'Your Instagram style information has been updated.',
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/instagram/style-profile'] });
     },
     onError: (error: Error) => {
