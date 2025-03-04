@@ -59,8 +59,19 @@ app.use((req, res, next) => {
 
   // Use port 5000 on Replit, 3000 for local development
   const isReplit = process.env.REPL_ID || process.env.REPLIT_CLUSTER;
-  const PORT = isReplit ? 5000 : 3000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
+  const PRIMARY_PORT = isReplit ? 5000 : 3000;
+  const FALLBACK_PORT = isReplit ? 5001 : 3001;
+  
+  server.listen(PRIMARY_PORT, "0.0.0.0", () => {
+    log(`serving on port ${PRIMARY_PORT}`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      log(`Port ${PRIMARY_PORT} is already in use, trying fallback port ${FALLBACK_PORT}`);
+      server.listen(FALLBACK_PORT, "0.0.0.0", () => {
+        log(`serving on fallback port ${FALLBACK_PORT}`);
+      });
+    } else {
+      throw err;
+    }
   });
 })();
