@@ -26,17 +26,39 @@ export async function analyzeImage(imageBuffer: Buffer, userId?: number): Promis
         if (!user.instagramToken && user.instagramUsername) {
           const instagramAnalysis = await analyzeUserStyle(user.instagramUsername, userId);
 
+          // Check if this is a manual style profile or an automatically analyzed one
+          const manualStyle = await storage.getManualStyleProfile(userId);
+
           // Enhanced prompt with detailed style information
-          const styleDetails = `
+          let styleDetails = `
           Based on the user's Instagram profile analysis:
           - Caption Style: ${instagramAnalysis.captionStyles.join(', ')}
           - Common Themes: ${instagramAnalysis.commonThemes.join(', ')}
           - Preferred Caption Length: ${instagramAnalysis.captionLengthPreference}
           - Emoji Usage: ${instagramAnalysis.emojiUsage}
           - Caption Tone: ${instagramAnalysis.captionTone.join(', ')}
-          - Hashtags Per Post: ${instagramAnalysis.hashtagsPerPost.toFixed(1)}
+          `;
 
-          Generate a caption that reflects this personal style. If they use many emojis, include emojis. Match their typical caption length and tone. Incorporate themes they commonly post about if relevant to the image. If they use hashtags heavily, include 3-5 relevant hashtags at the end of the caption.
+          // Special handling for hashtags based on user preference
+          if (manualStyle && manualStyle.isManual) {
+            // If manual style exists, check hashtag preference
+            const hashtagsInstruction = manualStyle.hashtagsPerPost > 0 
+              ? `Include ${Math.min(5, manualStyle.hashtagsPerPost)} relevant hashtags at the end of the caption.`
+              : `DO NOT include any hashtags in the caption as the user has explicitly chosen not to use hashtags.`;
+
+            styleDetails += `
+            IMPORTANT HASHTAG INSTRUCTION: ${hashtagsInstruction}
+            `;
+          } else {
+            // Default behavior for auto-analyzed profiles
+            styleDetails += `
+            - Hashtags Per Post: ${instagramAnalysis.hashtagsPerPost.toFixed(1)}
+            If they use hashtags heavily (more than 3 per post), include 3-5 relevant hashtags at the end of the caption.
+            `;
+          }
+
+          styleDetails += `
+          Generate a caption that reflects this personal style. If they use many emojis, include emojis. Match their typical caption length and tone. Incorporate themes they commonly post about if relevant to the image.
           `;
 
           systemMessage = systemMessage + styleDetails;

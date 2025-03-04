@@ -42,7 +42,8 @@ export async function fetchPostsByUsername(username: string, userId: number, lim
 
     // Use Instaloader to download recent posts with the chosen user agent
     // We're just getting metadata (--no-pictures --no-videos) as we only need captions
-    const command = `instaloader --user-agent="${userAgent}" --no-pictures --no-videos --no-video-thumbnails --no-captions --no-profile-pic --count ${limit} --requests-timeout 30 -- ${username}`;
+    // Remove the problematic --requests-timeout parameter that was causing errors
+    const command = `instaloader --user-agent="${userAgent}" --no-pictures --no-videos --no-video-thumbnails --no-captions --no-profile-pic --count ${limit} -- ${username}`;
 
     try {
       // Add a random delay before making the request to appear more human-like (3-7 seconds)
