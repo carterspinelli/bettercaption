@@ -17,7 +17,7 @@ export function InstagramConnectButton() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Query Instagram connection status
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
     queryKey: ['/api/instagram/profile'],
     retry: false,
     refetchOnWindowFocus: false,
@@ -36,11 +36,11 @@ export function InstagramConnectButton() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!res.ok) {
         throw new Error('Failed to disconnect Instagram account');
       }
-      
+
       return await res.json();
     },
     onSuccess: () => {
@@ -61,7 +61,8 @@ export function InstagramConnectButton() {
 
   const handleConnect = () => {
     setIsLoading(true);
-    window.location.href = '/api/auth/instagram';
+    // Use the exact Instagram OAuth URL provided
+    window.location.href = 'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights';
   };
 
   const handleDisconnect = () => {
