@@ -21,6 +21,10 @@ export interface IStorage {
   getInstagramPosts(userId: number): Promise<InstagramPost[]>;
   getInstagramPostById(id: string): Promise<InstagramPost | undefined>;
 
+  // Manual style profile methods
+  saveManualStyleProfile(userId: number, styleProfile: any): Promise<void>;
+  getManualStyleProfile(userId: number): Promise<any | undefined>;
+
   sessionStore: session.Store;
 }
 
@@ -28,6 +32,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private images: Map<number, Image>;
   private instagramPosts: Map<number, InstagramPost>;
+  private manualStyleProfiles: Map<number, any>;
   private currentUserId: number;
   private currentImageId: number;
   private currentInstagramPostId: number;
@@ -37,6 +42,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.images = new Map();
     this.instagramPosts = new Map();
+    this.manualStyleProfiles = new Map();
     this.currentUserId = 1;
     this.currentImageId = 1;
     this.currentInstagramPostId = 1;
@@ -77,7 +83,7 @@ export class MemStorage implements IStorage {
       ...insertImage, 
       id, 
       createdAt: now,
-      userId: insertImage.userId 
+      userId: insertImage.userId || 0 
     };
     this.images.set(id, image);
     return image;
@@ -140,9 +146,11 @@ export class MemStorage implements IStorage {
 
   async saveInstagramPost(insertPost: InsertInstagramPost): Promise<InstagramPost> {
     const id = this.currentInstagramPostId++;
+    const now = new Date();
     const post: InstagramPost = { 
       ...insertPost, 
-      id 
+      id,
+      createdAt: now 
     };
     this.instagramPosts.set(id, post);
     return post;
@@ -158,6 +166,15 @@ export class MemStorage implements IStorage {
     return Array.from(this.instagramPosts.values()).find(
       (post) => post.instagramId === instagramId
     );
+  }
+
+  // Manual style profile methods
+  async saveManualStyleProfile(userId: number, styleProfile: any): Promise<void> {
+    this.manualStyleProfiles.set(userId, styleProfile);
+  }
+
+  async getManualStyleProfile(userId: number): Promise<any | undefined> {
+    return this.manualStyleProfiles.get(userId);
   }
 }
 

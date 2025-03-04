@@ -133,6 +133,12 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Instagram account not connected" });
       }
 
+      // Check if user has a manual style profile saved
+      const manualStyle = await storage.getManualStyleProfile(user.id);
+      if (manualStyle) {
+        return res.json(manualStyle);
+      }
+
       // Analyze the user's Instagram style
       const styleProfile = await analyzeUserStyle(user.instagramUsername, user.id);
       res.json(styleProfile);
@@ -278,6 +284,75 @@ export function registerRoutes(app: Express): Server {
     } catch (error: any) {
       console.error("Error connecting Instagram account by username:", error);
       return res.status(500).send(error.message || "An error occurred while connecting Instagram account");
+    }
+  });
+
+  // Endpoint to handle manual style profile submissions
+  app.post("/api/instagram/manual-style", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const { captionLength, emojiUsage, captionTone, themes, useHashtags } = req.body;
+
+      if (!captionLength || !emojiUsage || !captionTone || !themes) {
+        return res.status(400).send("Missing required style preferences");
+      }
+
+      const userId = req.user!.id;
+
+      // Generate caption styles based on user preferences
+      const captionStyles = [];
+
+      if (captionLength === 'Short') captionStyles.push('Concise');
+      if (captionLength === 'Long') captionStyles.push('Detailed');
+
+      if (emojiUsage === 'High') captionStyles.push('Emoji-rich');
+
+      if (captionTone.includes('Humorous')) captionStyles.push('Humorous');
+      if (captionTone.includes('Inspirational')) captionStyles.push('Inspirational');
+      if (captionTone.includes('Educational')) captionStyles.push('Informative');
+
+      if (useHashtags) captionStyles.push('Hashtag-heavy');
+
+      // Ensure we have at least 2 styles
+      if (captionStyles.length < 2) {
+        for (const tone of captionTone.slice(0, 2)) {
+          captionStyles.push(tone);
+        }
+      }
+
+      // Limit to top 4 styles
+      const finalCaptionStyles = captionStyles.slice(0, 4);
+
+      // Create a style profile
+      const styleProfile = {
+        captionStyles: finalCaptionStyles,
+        commonThemes: themes,
+        recommendedHashtags: [],
+        engagementInsights: {
+          averageLikes: 0,
+          averageComments: 0,
+          totalPosts: 0
+        },
+        captionLengthPreference: captionLength,
+        emojiUsage: emojiUsage,
+        captionTone: captionTone,
+        mentionFrequency: 'Low',
+        hashtagsPerPost: useHashtags ? 3 : 0,
+        isManual: true
+      };
+
+      // Save the style profile
+      await storage.saveManualStyleProfile(userId, styleProfile);
+
+      return res.status(200).json({
+        success: true,
+        message: "Successfully saved style preferences",
+        styleProfile
+      });
+    } catch (error: any) {
+      console.error("Error saving manual style profile:", error);
+      return res.status(500).send(error.message || "An error occurred while saving style preferences");
     }
   });
 

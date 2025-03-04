@@ -29,12 +29,28 @@ export async function fetchPostsByUsername(username: string, userId: number, lim
 
     console.log(`Fetching recent posts for Instagram user: ${username}`);
 
-    // Use Instaloader to download recent posts
+    // Random user agents to simulate different browsers
+    const userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+    ];
+
+    // Select a random user agent
+    const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+
+    // Use Instaloader to download recent posts with the chosen user agent
     // We're just getting metadata (--no-pictures --no-videos) as we only need captions
-    const command = `instaloader --no-pictures --no-videos --no-video-thumbnails --no-captions --no-profile-pic --count ${limit} -- ${username}`;
+    const command = `instaloader --user-agent="${userAgent}" --no-pictures --no-videos --no-video-thumbnails --no-captions --no-profile-pic --count ${limit} --requests-timeout 30 -- ${username}`;
 
     try {
-      const { stdout, stderr } = await execAsync(command, { cwd: TEMP_DIR });
+      // Add a random delay before making the request to appear more human-like (3-7 seconds)
+      const randomDelay = Math.floor(Math.random() * 4000) + 3000;
+      console.log(`Adding a delay of ${randomDelay}ms before making request to appear more natural...`);
+      await new Promise(resolve => setTimeout(resolve, randomDelay));
+
+      const { stdout, stderr } = await execAsync(command, { cwd: TEMP_DIR, timeout: 60000 });
 
       if (stderr && !stderr.includes('Warning')) {
         console.error('Instaloader error:', stderr);
@@ -151,8 +167,9 @@ export async function analyzeUserStyle(username: string, userId: number): Promis
   if (avgCaptionLength < 50) captionLengthPreference = 'Short';
   else if (avgCaptionLength > 150) captionLengthPreference = 'Long';
 
-  // Emoji detection
-  const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+  // Emoji detection - using a simpler regex approach without unicode property escapes
+  // This is more compatible with older TypeScript/JavaScript versions
+  const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
   const totalEmojis = posts.reduce((count, post) => {
     if (!post.caption) return count;
     const matches = post.caption.match(emojiRegex);

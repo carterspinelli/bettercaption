@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Instagram, RefreshCw, Sparkles } from "lucide-react";
+import { Instagram, RefreshCw, Sparkles, Edit } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ManualStyleForm } from "./manual-style-form";
 
 interface InstagramProfileResponse {
   connected: boolean;
@@ -32,6 +33,7 @@ interface StyleProfileResponse {
 export function InstagramStylePreview() {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isManualStyleOpen, setIsManualStyleOpen] = useState(false);
 
   // Query Instagram profile to see if connected
   const { data: instagramProfile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
@@ -107,145 +109,179 @@ export function InstagramStylePreview() {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Instagram className="h-4 w-4" />
-          Your Instagram Style Profile
-        </CardTitle>
-        <CardDescription>
-          This information is used to personalize your captions
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {styleProfile ? (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  Caption Style
-                </h4>
-                <div className="flex flex-wrap gap-1">
-                  {styleProfile.captionStyles.map((style, index) => (
-                    <span key={index} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
-                      {style}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Content Themes</h4>
-                <div className="flex flex-wrap gap-1">
-                  {styleProfile.commonThemes.map((theme, index) => (
-                    <span key={index} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
-                      {theme}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {isExpanded && (
-              <>
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Writing Style</h4>
-                    <ul className="text-xs space-y-1">
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Caption Length:</span>
-                        <span>{styleProfile.captionLengthPreference}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Emoji Usage:</span>
-                        <span>{styleProfile.emojiUsage}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Tone:</span>
-                        <span>{styleProfile.captionTone.slice(0, 2).join(', ')}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Mentions:</span>
-                        <span>{styleProfile.mentionFrequency}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Hashtags/Post:</span>
-                        <span>{styleProfile.hashtagsPerPost.toFixed(1)}</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Engagement</h4>
-                    <ul className="text-xs space-y-1">
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Avg. Likes:</span>
-                        <span>{styleProfile.engagementInsights.averageLikes.toFixed(0)}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Avg. Comments:</span>
-                        <span>{styleProfile.engagementInsights.averageComments.toFixed(1)}</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span className="text-muted-foreground">Total Posts:</span>
-                        <span>{styleProfile.engagementInsights.totalPosts}</span>
-                      </li>
-                    </ul>
+    <>
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Instagram className="h-4 w-4" />
+            Your Instagram Style Profile
+          </CardTitle>
+          <CardDescription>
+            This information is used to personalize your captions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {styleProfile ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    Caption Style
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {styleProfile.captionStyles.map((style, index) => (
+                      <span key={index} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                        {style}
+                      </span>
+                    ))}
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Content Themes</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {styleProfile.commonThemes.map((theme, index) => (
+                      <span key={index} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                        {theme}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-                {styleProfile.recommendedHashtags.length > 0 && (
-                  <div className="pt-2 border-t">
-                    <h4 className="text-sm font-medium mb-2">Your Popular Hashtags</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {styleProfile.recommendedHashtags.slice(0, 8).map((hashtag, index) => (
-                        <span key={index} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold">
-                          {hashtag}
-                        </span>
-                      ))}
+              {isExpanded && (
+                <>
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Writing Style</h4>
+                      <ul className="text-xs space-y-1">
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Caption Length:</span>
+                          <span>{styleProfile.captionLengthPreference}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Emoji Usage:</span>
+                          <span>{styleProfile.emojiUsage}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Tone:</span>
+                          <span>{styleProfile.captionTone.slice(0, 2).join(', ')}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Mentions:</span>
+                          <span>{styleProfile.mentionFrequency}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Hashtags/Post:</span>
+                          <span>{styleProfile.hashtagsPerPost.toFixed(1)}</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Engagement</h4>
+                      <ul className="text-xs space-y-1">
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Avg. Likes:</span>
+                          <span>{styleProfile.engagementInsights.averageLikes.toFixed(0)}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Avg. Comments:</span>
+                          <span>{styleProfile.engagementInsights.averageComments.toFixed(1)}</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span className="text-muted-foreground">Total Posts:</span>
+                          <span>{styleProfile.engagementInsights.totalPosts}</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
-                )}
-              </>
-            )}
 
-            <div className="flex justify-between pt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? 'Show Less' : 'Show More'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-                onClick={() => refreshPostsMutation.mutate()}
-                disabled={refreshPostsMutation.isPending}
-              >
-                <RefreshCw className="h-3 w-3" />
-                {refreshPostsMutation.isPending ? 'Refreshing...' : 'Refresh Data'}
-              </Button>
+                  {styleProfile.recommendedHashtags.length > 0 && (
+                    <div className="pt-2 border-t">
+                      <h4 className="text-sm font-medium mb-2">Your Popular Hashtags</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {styleProfile.recommendedHashtags.slice(0, 8).map((hashtag, index) => (
+                          <span key={index} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold">
+                            {hashtag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="flex justify-between pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                >
+                  {isExpanded ? 'Show Less' : 'Show More'}
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => setIsManualStyleOpen(true)}
+                  >
+                    <Edit className="h-3 w-3" />
+                    Customize Style
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => refreshPostsMutation.mutate()}
+                    disabled={refreshPostsMutation.isPending}
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {refreshPostsMutation.isPending ? 'Refreshing...' : 'Refresh Data'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground mb-2">
+                No style profile available. We'll generate one based on your Instagram posts.
+              </p>
+              <div className="flex flex-col gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => refreshPostsMutation.mutate()}
+                  disabled={refreshPostsMutation.isPending}
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {refreshPostsMutation.isPending ? 'Analyzing...' : 'Analyze My Posts'}
+                </Button>
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-border"></div>
+                  <span className="mx-2 text-xs text-muted-foreground">or</span>
+                  <div className="flex-grow border-t border-border"></div>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => setIsManualStyleOpen(true)}
+                >
+                  <Edit className="h-3 w-3" />
+                  Set Style Manually
+                </Button>
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground mb-2">
-              No style profile available. We'll generate one based on your Instagram posts.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => refreshPostsMutation.mutate()}
-              disabled={refreshPostsMutation.isPending}
-            >
-              <RefreshCw className="h-3 w-3" />
-              {refreshPostsMutation.isPending ? 'Analyzing...' : 'Analyze My Posts'}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      <ManualStyleForm
+        isOpen={isManualStyleOpen}
+        onClose={() => setIsManualStyleOpen(false)}
+      />
+    </>
   );
 }
