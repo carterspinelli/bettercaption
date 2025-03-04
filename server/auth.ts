@@ -34,8 +34,8 @@ export function setupAuth(app: Express) {
   console.log('Current session secret:', process.env.SESSION_SECRET);
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || process.env.REPL_ID || 'steve-jobs-was-cool-7-+',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     name: 'sessionId',
     cookie: {

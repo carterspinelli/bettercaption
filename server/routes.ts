@@ -123,6 +123,85 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/dashboard", async (req, res, next) => {
+    // This route handles both normal dashboard requests and Instagram OAuth redirects
+    // If there's a code parameter, it's from Instagram OAuth
+    if (req.query.code) {
+      if (!req.isAuthenticated()) {
+        return res.redirect('/auth?error=instagram-auth-failed');
+      }
+
+      try {
+        // Exchange the code for a token
+        const response = await fetch('https://api.instagram.com/oauth/access_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: process.env.INSTAGRAM_CLIENT_ID || '',
+            client_secret: process.env.INSTAGRAM_CLIENT_SECRET || '',
+            grant_type: 'authorization_code',
+            redirect_uri: 'https://bettercaption-carterspinelli.replit.app/dashboard',
+            code: req.query.code as string
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Instagram token exchange failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const accessToken = data.access_token;
+        const instagramId = data.user_id;
+
+        // Get additional profile info
+        const profile = await fetchInstagramUserProfile(accessToken);
+
+        const userId = req.user!.id;
+        const expires = new Date();
+        expires.setDate(expires.getDate() + 60); // Instagram tokens typically valid for 60 days
+
+        // Connect Instagram account to user
+        const updatedUser = await storage.connectInstagramAccount(
+          userId,
+          profile.id,
+          profile.username,
+          accessToken,
+          expires
+        );
+
+        // Fetch and store Instagram media
+        const mediaData = await fetchInstagramMedia(accessToken);
+        await saveInstagramPosts(updatedUser, mediaData);
+
+        // Redirect to dashboard with success parameter
+        return res.redirect('/dashboard?instagram=connected');
+      } catch (error) {
+        console.error('Error connecting Instagram account:', error);
+        return res.redirect('/dashboard?error=instagram-connection-failed');
+      }
+    } else {
+      // If no code parameter, just handle as normal dashboard request
+      try {
+        // Check if client/dist directory exists
+        const fs = require('fs');
+        const path = require('path');
+        const distPath = './client/dist';
+        const indexPath = path.join(distPath, 'index.html');
+
+        if (!fs.existsSync(indexPath)) {
+          console.warn('Client build not found. Returning simple response.');
+          return res.send('Client build not found. Make sure to build the client first.');
+        }
+
+        // We'll let the client-side routing handle this
+        return res.sendFile('index.html', { root: distPath });
+      } catch (error) {
+        console.error('Error serving client files:', error);
+        return res.status(500).send('Server error');
+      }
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
