@@ -48,7 +48,3 @@ npm install
 ```
 npm run dev
 ```
-
-## License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
