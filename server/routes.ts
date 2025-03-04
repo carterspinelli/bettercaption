@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { analyzeImage, enhanceImage } from "./openai";
 import { fetchInstagramUserProfile, fetchInstagramMedia, saveInstagramPosts } from "./instagram";
+import { fetchPostsByUsername, analyzeUserStyle } from "./instaloader_service";
 
 const upload = multer({
   limits: {
@@ -31,7 +32,6 @@ export function registerRoutes(app: Express): Server {
 
   app.post(
     "/api/images",
-    // Authentication middleware
     (req, res, next) => {
       console.log('Auth check:', {
         isAuthenticated: req.isAuthenticated(),
@@ -46,7 +46,6 @@ export function registerRoutes(app: Express): Server {
       }
       next();
     },
-    // File upload middleware
     upload.single("image"),
     async (req, res) => {
       console.log('Processing image upload request:', {
@@ -219,6 +218,69 @@ export function registerRoutes(app: Express): Server {
         console.error('Error serving client files:', error);
         return res.status(500).send('Server error');
       }
+    }
+  });
+
+  app.post("/api/instagram/connect-by-username", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const { username } = req.body;
+
+      if (!username || typeof username !== 'string') {
+        return res.status(400).send("Instagram username is required");
+      }
+
+      // Update user with Instagram username
+      const userId = req.user!.id;
+
+      // Set Instagram connected to true but without token (since we're not using OAuth)
+      const currentDate = new Date();
+      const expiryDate = new Date();
+      expiryDate.setFullYear(currentDate.getFullYear() + 1); // Set expiry to 1 year
+
+      const updatedUser = await storage.connectInstagramAccount(
+        userId,
+        username,  // Using username as ID since we don't have the real Instagram ID
+        username,
+        '',        // No token needed
+        expiryDate
+      );
+
+      // Fetch posts in background
+      fetchPostsByUsername(username, userId)
+        .catch(err => console.error(`Background fetch failed for ${username}:`, err));
+
+      return res.status(200).json({
+        success: true,
+        message: "Successfully connected Instagram account via username",
+        user: updatedUser
+      });
+    } catch (error: any) {
+      console.error("Error connecting Instagram account by username:", error);
+      return res.status(500).send(error.message || "An error occurred while connecting Instagram account");
+    }
+  });
+
+  app.post("/api/instagram/refresh-posts", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+
+    try {
+      const user = await storage.getUser(req.user!.id);
+
+      if (!user || !user.instagramConnected || !user.instagramUsername) {
+        return res.status(400).send("Instagram account not connected");
+      }
+
+      await fetchPostsByUsername(user.instagramUsername, user.id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Successfully refreshed Instagram posts"
+      });
+    } catch (error: any) {
+      console.error("Error refreshing Instagram posts:", error);
+      return res.status(500).send(error.message || "An error occurred while refreshing Instagram posts");
     }
   });
 

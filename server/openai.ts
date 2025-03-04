@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import sharp from "sharp";
 import { analyzeInstagramStyle, enhanceCaptionPrompt } from "./instagram";
+import { analyzeUserStyle } from "./instaloader_service";
 import { storage } from "./storage";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -21,8 +22,15 @@ export async function analyzeImage(imageBuffer: Buffer, userId?: number): Promis
     try {
       const user = await storage.getUser(userId);
       if (user && user.instagramConnected) {
-        const instagramAnalysis = await analyzeInstagramStyle(userId);
-        systemMessage = enhanceCaptionPrompt(systemMessage, userId, instagramAnalysis);
+        // Use Instaloader-based analysis if the user is connected via username
+        if (!user.instagramToken && user.instagramUsername) {
+          const instagramAnalysis = await analyzeUserStyle(user.instagramUsername, userId);
+          systemMessage = enhanceCaptionPrompt(systemMessage, userId, instagramAnalysis);
+        } else {
+          // Use original OAuth-based analysis if the user has a token
+          const instagramAnalysis = await analyzeInstagramStyle(userId);
+          systemMessage = enhanceCaptionPrompt(systemMessage, userId, instagramAnalysis);
+        }
       }
     } catch (error) {
       console.error('Error getting Instagram style for caption enhancement:', error);

@@ -5,6 +5,12 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface InstagramProfileResponse {
   connected: boolean;
@@ -13,10 +19,25 @@ interface InstagramProfileResponse {
   message?: string;
 }
 
+const usernameSchema = z.object({
+  username: z.string().min(1, "Username is required")
+});
+
+type UsernameFormValues = z.infer<typeof usernameSchema>;
+
 export function InstagramConnectButton() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [location] = useLocation();
+  const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
+
+  // Setup form
+  const form = useForm<UsernameFormValues>({
+    resolver: zodResolver(usernameSchema),
+    defaultValues: {
+      username: ""
+    }
+  });
 
   // Query Instagram connection status
   const { data: profile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
@@ -57,6 +78,43 @@ export function InstagramConnectButton() {
     }
   }, [location, toast]);
 
+  // Connect by username mutation
+  const connectByUsernameMutation = useMutation({
+    mutationFn: async (username: string) => {
+      const res = await fetch('/api/instagram/connect-by-username', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to connect Instagram account by username');
+      }
+
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Instagram Connected',
+        description: 'Your Instagram account has been connected by username',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/instagram/profile'] });
+      setIsUsernameDialogOpen(false);
+      setIsLoading(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Connection Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+    }
+  });
+
   // Disconnect Instagram account
   const disconnectMutation = useMutation({
     mutationFn: async () => {
@@ -91,63 +149,17 @@ export function InstagramConnectButton() {
   });
 
   const handleConnect = () => {
-    setIsLoading(true);
-    // Use the exact Instagram OAuth URL provided
-    try {
-      // Try opening in a popup window first
-      const width = 600;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
-
-      const popup = window.open(
-        'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights',
-        'Connect Instagram',
-        `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-      );
-
-      // Check if popup was blocked
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        // If popup failed, fallback to direct navigation
-        toast({
-          title: "Popup Blocked",
-          description: "Popup was blocked. Redirecting you directly to Instagram login.",
-          duration: 3000,
-        });
-
-        // Wait a moment to show the toast before redirecting
-        setTimeout(() => {
-          window.location.href = 'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights';
-        }, 1500);
-      } else {
-        // Set up a timer to check if the popup has been closed
-        const checkPopupClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkPopupClosed);
-            setIsLoading(false);
-            queryClient.invalidateQueries({ queryKey: ['/api/instagram/profile'] });
-          }
-        }, 1000);
-
-        // Set a timeout to stop checking after 2 minutes
-        setTimeout(() => {
-          clearInterval(checkPopupClosed);
-          setIsLoading(false);
-        }, 120000);
-      }
-    } catch (error) {
-      console.error("Error opening Instagram auth page:", error);
-      toast({
-        title: "Connection Error",
-        description: "Could not connect to Instagram. Please try again later.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+    // Open the username dialog instead of using OAuth
+    setIsUsernameDialogOpen(true);
   };
 
   const handleDisconnect = () => {
     disconnectMutation.mutate();
+  };
+
+  const onSubmitUsername = (values: UsernameFormValues) => {
+    setIsLoading(true);
+    connectByUsernameMutation.mutate(values.username);
   };
 
   if (isLoadingProfile) {
@@ -184,14 +196,70 @@ export function InstagramConnectButton() {
   }
 
   return (
-    <Button
-      variant="outline"
-      className="w-full"
-      onClick={handleConnect}
-      disabled={isLoading || disconnectMutation.isPending}
-    >
-      <Instagram className="mr-2 h-4 w-4" />
-      {isLoading ? 'Connecting...' : 'Connect Instagram Account'}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={handleConnect}
+        disabled={isLoading || connectByUsernameMutation.isPending}
+      >
+        <Instagram className="mr-2 h-4 w-4" />
+        {isLoading ? 'Connecting...' : 'Connect Instagram Account'}
+      </Button>
+
+      <Dialog open={isUsernameDialogOpen} onOpenChange={setIsUsernameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect Instagram Account</DialogTitle>
+            <DialogDescription>
+              Enter your Instagram username to connect your account. This will help us personalize captions based on your Instagram style.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitUsername)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram Username</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="@yourusername" 
+                        {...field} 
+                        value={field.value}
+                        onChange={(e) => {
+                          // Remove @ if user types it
+                          const value = e.target.value.replace('@', '');
+                          field.onChange(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsUsernameDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || connectByUsernameMutation.isPending}
+                >
+                  {isLoading || connectByUsernameMutation.isPending ? 'Connecting...' : 'Connect'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
