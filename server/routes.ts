@@ -124,16 +124,21 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Create a dedicated endpoint to handle the Instagram OAuth callback
   app.get("/dashboard", async (req, res, next) => {
     // This route handles both normal dashboard requests and Instagram OAuth redirects
     // If there's a code parameter, it's from Instagram OAuth
     if (req.query.code) {
+      console.log('Instagram OAuth callback received with code', req.query.code.substring(0, 5) + '...');
+
       if (!req.isAuthenticated()) {
+        console.error('User not authenticated during Instagram callback');
         return res.redirect('/auth?error=instagram-auth-failed');
       }
 
       try {
         // Exchange the code for a token
+        console.log('Exchanging code for token...');
         const response = await fetch('https://api.instagram.com/oauth/access_token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -147,21 +152,32 @@ export function registerRoutes(app: Express): Server {
         });
 
         if (!response.ok) {
-          throw new Error(`Instagram token exchange failed: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error('Instagram token exchange failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          throw new Error(`Instagram token exchange failed: ${response.statusText} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('Token exchange successful, got user_id:', data.user_id);
+
         const accessToken = data.access_token;
         const instagramId = data.user_id;
 
         // Get additional profile info
+        console.log('Fetching Instagram user profile...');
         const profile = await fetchInstagramUserProfile(accessToken);
+        console.log('Got profile for user:', profile.username);
 
         const userId = req.user!.id;
         const expires = new Date();
         expires.setDate(expires.getDate() + 60); // Instagram tokens typically valid for 60 days
 
         // Connect Instagram account to user
+        console.log('Connecting Instagram account to user...');
         const updatedUser = await storage.connectInstagramAccount(
           userId,
           profile.id,
@@ -171,17 +187,20 @@ export function registerRoutes(app: Express): Server {
         );
 
         // Fetch and store Instagram media
+        console.log('Fetching Instagram media...');
         const mediaData = await fetchInstagramMedia(accessToken);
         await saveInstagramPosts(updatedUser, mediaData);
+        console.log('Instagram connection successful!');
 
         // Redirect to dashboard with success parameter
         return res.redirect('/dashboard?instagram=connected');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error connecting Instagram account:', error);
-        return res.redirect('/dashboard?error=instagram-connection-failed');
+        return res.redirect('/dashboard?error=instagram-connection-failed&message=' + encodeURIComponent(error.message));
       }
     } else {
       // If no code parameter, just handle as normal dashboard request
+      // We'll let the client-side routing handle this
       try {
         // Check if client/dist directory exists
         const fs = require('fs');

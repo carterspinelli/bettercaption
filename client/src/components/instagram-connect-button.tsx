@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Instagram } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface InstagramProfileResponse {
   connected: boolean;
@@ -15,6 +16,7 @@ interface InstagramProfileResponse {
 export function InstagramConnectButton() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [location] = useLocation();
 
   // Query Instagram connection status
   const { data: profile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
@@ -25,6 +27,35 @@ export function InstagramConnectButton() {
       // Silently handle error - user might not be connected
     }
   });
+
+  // Check URL parameters for Instagram connection results
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('instagram') === 'connected') {
+      toast({
+        title: "Instagram Connected!",
+        description: "Your Instagram account has been successfully connected.",
+        duration: 5000,
+      });
+      // Remove the query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Refresh profile data
+      queryClient.invalidateQueries({ queryKey: ['/api/instagram/profile'] });
+      setIsLoading(false);
+    } else if (params.get('error') === 'instagram-connection-failed') {
+      const message = params.get('message') || 'Please try again later.';
+      toast({
+        title: "Instagram Connection Failed",
+        description: `Could not connect your Instagram account: ${message}`,
+        variant: "destructive",
+        duration: 7000,
+      });
+      // Remove the query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setIsLoading(false);
+    }
+  }, [location, toast]);
 
   // Disconnect Instagram account
   const disconnectMutation = useMutation({
@@ -88,6 +119,21 @@ export function InstagramConnectButton() {
         setTimeout(() => {
           window.location.href = 'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights';
         }, 1500);
+      } else {
+        // Set up a timer to check if the popup has been closed
+        const checkPopupClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkPopupClosed);
+            setIsLoading(false);
+            queryClient.invalidateQueries({ queryKey: ['/api/instagram/profile'] });
+          }
+        }, 1000);
+
+        // Set a timeout to stop checking after 2 minutes
+        setTimeout(() => {
+          clearInterval(checkPopupClosed);
+          setIsLoading(false);
+        }, 120000);
       }
     } catch (error) {
       console.error("Error opening Instagram auth page:", error);
