@@ -17,7 +17,7 @@ export function InstagramConnectButton() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Query Instagram connection status
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<InstagramProfileResponse>({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['/api/instagram/profile'],
     retry: false,
     refetchOnWindowFocus: false,

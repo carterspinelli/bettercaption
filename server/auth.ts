@@ -98,9 +98,8 @@ export function setupAuth(app: Express) {
 
   // Instagram authentication strategy
   if (process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET) {
-    // Get the public URL from environment or use a default for Replit
-    const appUrl = process.env.APP_URL || `https://${process.env.REPLIT_SLUG || 'this-repl'}.${process.env.REPL_OWNER || 'repl.co'}.repl.co`;
-    const callbackUrl = `${appUrl}/api/auth/instagram/callback`;
+    // Use the exact redirect URI that was configured in Facebook Developer Console
+    const callbackUrl = "https://bettercaption-carterspinelli.replit.app/dashboard";
 
     console.log('Instagram callback URL:', callbackUrl);
 
@@ -215,7 +214,7 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Instagram authentication routes
+  // Create a route to handle the initial redirect to Instagram login
   app.get('/api/auth/instagram', (req, res, next) => {
     // Instagram authentication requires user to be logged in first
     if (!req.isAuthenticated()) {
@@ -225,18 +224,40 @@ export function setupAuth(app: Express) {
     passport.authenticate('instagram')(req, res, next);
   });
 
-  app.get('/api/auth/instagram/callback', (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.redirect('/auth?error=instagram-auth-failed');
-    }
-
-    passport.authenticate('instagram', async (err: any, instagramProfile: any) => {
-      if (err || !instagramProfile) {
-        console.error('Instagram authentication error:', err);
-        return res.redirect('/dashboard?error=instagram-auth-failed');
+  // Create a separate route to handle the callback from dashboard
+  app.get('/dashboard', async (req, res, next) => {
+    // This route handles both normal dashboard requests and Instagram OAuth redirects
+    // If there's a code parameter, it's from Instagram OAuth
+    if (req.query.code) {
+      if (!req.isAuthenticated()) {
+        return res.redirect('/auth?error=instagram-auth-failed');
       }
 
       try {
+        // Exchange the code for a token
+        const response = await fetch('https://api.instagram.com/oauth/access_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: process.env.INSTAGRAM_CLIENT_ID || '',
+            client_secret: process.env.INSTAGRAM_CLIENT_SECRET || '',
+            grant_type: 'authorization_code',
+            redirect_uri: 'https://bettercaption-carterspinelli.replit.app/dashboard',
+            code: req.query.code as string
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Instagram token exchange failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const accessToken = data.access_token;
+        const instagramId = data.user_id;
+
+        // Get additional profile info
+        const profile = await fetchInstagramUserProfile(accessToken);
+
         const userId = req.user!.id;
         const expires = new Date();
         expires.setDate(expires.getDate() + 60); // Instagram tokens typically valid for 60 days
@@ -244,22 +265,27 @@ export function setupAuth(app: Express) {
         // Connect Instagram account to user
         const updatedUser = await storage.connectInstagramAccount(
           userId,
-          instagramProfile.instagramId,
-          instagramProfile.instagramUsername,
-          instagramProfile.accessToken,
+          profile.id,
+          profile.username,
+          accessToken,
           expires
         );
 
         // Fetch and store Instagram media
-        const mediaData = await fetchInstagramMedia(instagramProfile.accessToken);
+        const mediaData = await fetchInstagramMedia(accessToken);
         await saveInstagramPosts(updatedUser, mediaData);
 
-        res.redirect('/dashboard?instagram=connected');
+        // Redirect to dashboard with success parameter
+        return res.redirect('/dashboard?instagram=connected');
       } catch (error) {
         console.error('Error connecting Instagram account:', error);
-        res.redirect('/dashboard?error=instagram-connection-failed');
+        return res.redirect('/dashboard?error=instagram-connection-failed');
       }
-    })(req, res, next);
+    } else {
+      // If no code parameter, just handle as normal dashboard request
+      // We'll let the client-side routing handle this
+      return res.sendFile('index.html', { root: './client/dist' });
+    }
   });
 
   app.post('/api/instagram/disconnect', async (req, res, next) => {
