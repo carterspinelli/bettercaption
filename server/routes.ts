@@ -4,6 +4,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { analyzeImage, enhanceImage } from "./openai";
+import { fetchInstagramUserProfile, fetchInstagramMedia, saveInstagramPosts } from "./instagram";
 
 const upload = multer({
   limits: {

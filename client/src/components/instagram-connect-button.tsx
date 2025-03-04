@@ -62,7 +62,42 @@ export function InstagramConnectButton() {
   const handleConnect = () => {
     setIsLoading(true);
     // Use the exact Instagram OAuth URL provided
-    window.location.href = 'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights';
+    try {
+      // Try opening in a popup window first
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+
+      const popup = window.open(
+        'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights',
+        'Connect Instagram',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
+      );
+
+      // Check if popup was blocked
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        // If popup failed, fallback to direct navigation
+        toast({
+          title: "Popup Blocked",
+          description: "Popup was blocked. Redirecting you directly to Instagram login.",
+          duration: 3000,
+        });
+
+        // Wait a moment to show the toast before redirecting
+        setTimeout(() => {
+          window.location.href = 'https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=4197013223860242&redirect_uri=https://bettercaption-carterspinelli.replit.app/dashboard&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights';
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error opening Instagram auth page:", error);
+      toast({
+        title: "Connection Error",
+        description: "Could not connect to Instagram. Please try again later.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const handleDisconnect = () => {
