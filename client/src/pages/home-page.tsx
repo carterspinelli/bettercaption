@@ -4,8 +4,9 @@ import { Image } from "@shared/schema";
 import { UploadZone } from "@/components/upload-zone";
 import { EnhancedImageCard } from "@/components/enhanced-image-card";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { InstagramConnectButton } from "@/components/instagram-connect-button";
+import { LogOut, Info } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -74,24 +75,43 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <UploadZone
-          onUpload={(file) => uploadMutation.mutate(file)}
-          isUploading={uploadMutation.isPending}
-        />
-
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {images.map((image) => (
-            <EnhancedImageCard key={image.id} image={image} />
-          ))}
-        </div>
-
-        {images.length === 0 && !uploadMutation.isPending && (
-          <div className="text-center mt-12">
-            <p className="text-muted-foreground">
-              No images yet. Upload one to get started!
+        <div className="space-y-8">
+          {/* Instagram Connect Section */}
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <div className="flex items-center mb-4">
+              <h2 className="text-lg font-semibold">Instagram Integration</h2>
+              <div className="relative ml-2 group">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <div className="absolute left-0 -top-2 transform -translate-y-full w-64 p-2 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
+                  Connect your Instagram account to generate captions that match your personal style and get better engagement!
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Connect your Instagram account to personalize your captions based on your posting style and improve engagement.
             </p>
+            <InstagramConnectButton />
           </div>
-        )}
+
+          <UploadZone
+            onUpload={(file) => uploadMutation.mutate(file)}
+            isUploading={uploadMutation.isPending}
+          />
+
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {images.map((image) => (
+              <EnhancedImageCard key={image.id} image={image} />
+            ))}
+          </div>
+
+          {images.length === 0 && !uploadMutation.isPending && (
+            <div className="text-center mt-12">
+              <p className="text-muted-foreground">
+                No images yet. Upload one to get started!
+              </p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

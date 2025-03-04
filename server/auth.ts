@@ -1,11 +1,13 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as InstagramStrategy } from "passport-instagram";
 import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { fetchInstagramUserProfile, fetchInstagramMedia, saveInstagramPosts } from "./instagram";
 
 declare global {
   namespace Express {
@@ -44,7 +46,7 @@ export function setupAuth(app: Express) {
       path: '/',
     }
   };
-  
+
   // Update the production settings
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
@@ -73,6 +75,7 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Local authentication strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -92,6 +95,39 @@ export function setupAuth(app: Express) {
       }
     }),
   );
+
+  // Instagram authentication strategy
+  if (process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET) {
+    passport.use(
+      new InstagramStrategy(
+        {
+          clientID: process.env.INSTAGRAM_CLIENT_ID,
+          clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
+          callbackURL: `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/instagram/callback`,
+          scope: ['user_profile', 'user_media'],
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            if (!profile.id) {
+              return done(new Error('No profile ID returned from Instagram'));
+            }
+
+            // User must be logged in to connect Instagram
+            // This is handled in the route middleware
+            return done(null, { 
+              instagramId: profile.id, 
+              instagramUsername: profile.username || profile.displayName || profile.id,
+              accessToken 
+            });
+          } catch (error) {
+            return done(error);
+          }
+        }
+      )
+    );
+  } else {
+    console.warn('Instagram OAuth is not configured. Missing INSTAGRAM_CLIENT_ID or INSTAGRAM_CLIENT_SECRET');
+  }
 
   passport.serializeUser((user, done) => {
     console.log('Serializing user:', user.id);
@@ -171,5 +207,78 @@ export function setupAuth(app: Express) {
 
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
+  });
+
+  // Instagram authentication routes
+  app.get('/api/auth/instagram', (req, res, next) => {
+    // Instagram authentication requires user to be logged in first
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "You must be logged in to connect Instagram" });
+    }
+
+    passport.authenticate('instagram')(req, res, next);
+  });
+
+  app.get('/api/auth/instagram/callback', (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.redirect('/auth?error=instagram-auth-failed');
+    }
+
+    passport.authenticate('instagram', async (err: any, instagramProfile: any) => {
+      if (err || !instagramProfile) {
+        console.error('Instagram authentication error:', err);
+        return res.redirect('/dashboard?error=instagram-auth-failed');
+      }
+
+      try {
+        const userId = req.user!.id;
+        const expires = new Date();
+        expires.setDate(expires.getDate() + 60); // Instagram tokens typically valid for 60 days
+
+        // Connect Instagram account to user
+        const updatedUser = await storage.connectInstagramAccount(
+          userId,
+          instagramProfile.instagramId,
+          instagramProfile.instagramUsername,
+          instagramProfile.accessToken,
+          expires
+        );
+
+        // Fetch and store Instagram media
+        const mediaData = await fetchInstagramMedia(instagramProfile.accessToken);
+        await saveInstagramPosts(updatedUser, mediaData);
+
+        res.redirect('/dashboard?instagram=connected');
+      } catch (error) {
+        console.error('Error connecting Instagram account:', error);
+        res.redirect('/dashboard?error=instagram-connection-failed');
+      }
+    })(req, res, next);
+  });
+
+  app.post('/api/instagram/disconnect', async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "You must be logged in to disconnect Instagram" });
+    }
+
+    try {
+      const updatedUser = await storage.disconnectInstagramAccount(req.user!.id);
+      res.json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get('/api/instagram/posts', async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "You must be logged in to view Instagram posts" });
+    }
+
+    try {
+      const posts = await storage.getInstagramPosts(req.user!.id);
+      res.json(posts);
+    } catch (error) {
+      next(error);
+    }
   });
 }

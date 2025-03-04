@@ -68,7 +68,9 @@ export function registerRoutes(app: Express): Server {
         console.log('Starting image enhancement...');
         const enhanced = await enhanceImage(req.file.buffer);
         console.log('Image enhanced, starting analysis...');
-        const analysis = await analyzeImage(req.file.buffer);
+
+        // Pass user ID to analyze image to incorporate Instagram style if available
+        const analysis = await analyzeImage(req.file.buffer, req.user!.id);
         console.log('Analysis complete');
 
         // In a real app, we would upload these to S3/CloudFlare/etc
@@ -97,6 +99,28 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const images = await storage.getImages(req.user!.id);
     res.json(images);
+  });
+
+  // Instagram posts API endpoint
+  app.get("/api/instagram/profile", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user || !user.instagramConnected) {
+        return res.status(404).json({ connected: false, message: "Instagram account not connected" });
+      }
+
+      // Return minimal profile info
+      res.json({
+        connected: true,
+        username: user.instagramUsername,
+        expiresAt: user.instagramTokenExpiresAt
+      });
+    } catch (error: any) {
+      console.error('Error fetching Instagram profile:', error);
+      res.status(500).send(error.message || "Failed to fetch Instagram profile");
+    }
   });
 
   const httpServer = createServer(app);

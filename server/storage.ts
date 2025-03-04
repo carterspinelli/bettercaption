@@ -1,4 +1,4 @@
-import { InsertUser, User, Image, InsertImage } from "@shared/schema";
+import { InsertUser, User, Image, InsertImage, InstagramPost, InsertInstagramPost } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -8,26 +8,38 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   createImage(image: InsertImage): Promise<Image>;
   getImages(userId: number): Promise<Image[]>;
   getImage(id: number): Promise<Image | undefined>;
-  
-  sessionStore: session.SessionStore;
+
+  // Instagram related methods
+  connectInstagramAccount(userId: number, instagramId: string, instagramUsername: string, 
+                         instagramToken: string, expiresAt: Date): Promise<User>;
+  disconnectInstagramAccount(userId: number): Promise<User>;
+  saveInstagramPost(post: InsertInstagramPost): Promise<InstagramPost>;
+  getInstagramPosts(userId: number): Promise<InstagramPost[]>;
+  getInstagramPostById(id: string): Promise<InstagramPost | undefined>;
+
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private images: Map<number, Image>;
+  private instagramPosts: Map<number, InstagramPost>;
   private currentUserId: number;
   private currentImageId: number;
-  sessionStore: session.SessionStore;
+  private currentInstagramPostId: number;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
     this.images = new Map();
+    this.instagramPosts = new Map();
     this.currentUserId = 1;
     this.currentImageId = 1;
+    this.currentInstagramPostId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -45,7 +57,15 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      instagramId: null, 
+      instagramUsername: null, 
+      instagramToken: null,
+      instagramConnected: false,
+      instagramTokenExpiresAt: null 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -53,7 +73,12 @@ export class MemStorage implements IStorage {
   async createImage(insertImage: InsertImage): Promise<Image> {
     const id = this.currentImageId++;
     const now = new Date();
-    const image: Image = { ...insertImage, id, createdAt: now };
+    const image: Image = { 
+      ...insertImage, 
+      id, 
+      createdAt: now,
+      userId: insertImage.userId 
+    };
     this.images.set(id, image);
     return image;
   }
@@ -66,6 +91,73 @@ export class MemStorage implements IStorage {
 
   async getImage(id: number): Promise<Image | undefined> {
     return this.images.get(id);
+  }
+
+  // Instagram related methods
+  async connectInstagramAccount(
+    userId: number, 
+    instagramId: string, 
+    instagramUsername: string, 
+    instagramToken: string,
+    expiresAt: Date
+  ): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    const updatedUser: User = {
+      ...user,
+      instagramId,
+      instagramUsername,
+      instagramToken,
+      instagramConnected: true,
+      instagramTokenExpiresAt: expiresAt
+    };
+
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async disconnectInstagramAccount(userId: number): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    const updatedUser: User = {
+      ...user,
+      instagramId: null,
+      instagramUsername: null,
+      instagramToken: null,
+      instagramConnected: false,
+      instagramTokenExpiresAt: null
+    };
+
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async saveInstagramPost(insertPost: InsertInstagramPost): Promise<InstagramPost> {
+    const id = this.currentInstagramPostId++;
+    const post: InstagramPost = { 
+      ...insertPost, 
+      id 
+    };
+    this.instagramPosts.set(id, post);
+    return post;
+  }
+
+  async getInstagramPosts(userId: number): Promise<InstagramPost[]> {
+    return Array.from(this.instagramPosts.values())
+      .filter((post) => post.userId === userId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getInstagramPostById(instagramId: string): Promise<InstagramPost | undefined> {
+    return Array.from(this.instagramPosts.values()).find(
+      (post) => post.instagramId === instagramId
+    );
   }
 }
 
